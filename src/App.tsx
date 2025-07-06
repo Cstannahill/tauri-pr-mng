@@ -37,6 +37,7 @@ import {
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SettingsDialog } from './components/blocks/settings-dialog/settings-dialog';
+import { CreateProjectDialog } from './components/blocks/create-project-dialog/create-project-dialog';
 
 // Tauri API - In real app, import from '@tauri-apps/api'
 const invoke = window.__TAURI__?.invoke || ((cmd, args) => {
@@ -436,124 +437,6 @@ const ContextMenu = ({ isOpen, position, onClose, project, category }) => {
   );
 };
 
-const CreateProjectModal = ({ isOpen, onClose, onCreateProject }) => {
-  const [projectName, setProjectName] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('desktop-apps');
-  const [selectedType, setSelectedType] = useState('rust');
-
-  const projectTypes = [
-    { value: 'rust', label: 'Rust', icon: <Zap className="w-4 h-4" /> },
-    { value: 'tauri', label: 'Tauri App', icon: <Monitor className="w-4 h-4" /> },
-    { value: 'react', label: 'React App', icon: <Globe className="w-4 h-4" /> },
-    { value: 'next', label: 'Next.js App', icon: <Globe className="w-4 h-4" /> },
-    { value: 'node', label: 'Node.js App', icon: <Terminal className="w-4 h-4" /> },
-    { value: 'python', label: 'Python App', icon: <Database className="w-4 h-4" /> },
-  ];
-
-  const categories = [
-    { value: 'desktop-apps', label: 'Desktop Apps' },
-    { value: 'web-apps', label: 'Web Apps' },
-    { value: 'cli-apps', label: 'CLI Apps' },
-    { value: 'other', label: 'Other' },
-  ];
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (projectName.trim()) {
-      onCreateProject(selectedCategory, projectName.trim(), selectedType);
-      setProjectName('');
-      onClose();
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Create New Project</h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Project Name
-            </label>
-            <input
-              type="text"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="my-awesome-project"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Category
-            </label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {categories.map(cat => (
-                <option key={cat.value} value={cat.value}>{cat.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Project Type
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {projectTypes.map(type => (
-                <button
-                  key={type.value}
-                  type="button"
-                  onClick={() => setSelectedType(type.value)}
-                  className={`flex items-center gap-2 p-3 rounded-md border-2 transition-colors ${
-                    selectedType === type.value
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                  }`}
-                >
-                  {type.icon}
-                  <span className="text-sm font-medium">{type.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Create Project
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
 
 const FilterDropdown = ({ isOpen, onClose, filters, onFiltersChange }) => {
   if (!isOpen) return null;
@@ -1055,10 +938,10 @@ const ProjectManager = () => {
         category={contextMenu.category}
       />
 
-      {/* Create Project Modal */}
-      <CreateProjectModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+      {/* Create Project Dialog */}
+      <CreateProjectDialog
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
         onCreateProject={handleCreateProject}
       />
 
