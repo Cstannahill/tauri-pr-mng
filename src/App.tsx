@@ -35,6 +35,7 @@ import { CreateProjectDialog } from './components/blocks/create-project-dialog/c
 import { ProjectCard } from './components/blocks/project-card/project-card';
 import { FilterDropdown } from './components/blocks/filter-dropdown/filter-dropdown';
 import { ProjectDetailsSidebar } from './components/blocks/project-details-sidebar/project-details-sidebar';
+import { ProjectStructureView } from './components/blocks/project-structure-view/project-structure-view';
 
 // Tauri API - In real app, import from '@tauri-apps/api'
 const invoke = window.__TAURI__?.invoke || ((cmd, args) => {
@@ -193,93 +194,6 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-const TreeNode = ({ name, isFolder, isExpanded, onToggle, children, level = 0, icon }) => {
-  return (
-    <div>
-      <div 
-        className={`flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer rounded-md transition-colors ${
-          level > 0 ? 'ml-4' : ''
-        }`}
-        onClick={onToggle}
-      >
-        {isFolder && (
-          <div className="w-4 h-4 flex items-center justify-center">
-            {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-          </div>
-        )}
-        {icon || (isFolder ? (
-          isExpanded ? <FolderOpen className="w-4 h-4 text-blue-500" /> : <Folder className="w-4 h-4 text-blue-500" />
-        ) : (
-          <File className="w-4 h-4 text-gray-500" />
-        ))}
-        <span className="text-sm font-medium">{name}</span>
-      </div>
-      {isExpanded && children && (
-        <div className="ml-2">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-};
-
-
-const ProjectStructureView = ({ project, structure }) => {
-  const [expandedPaths, setExpandedPaths] = useState({});
-  const [showHidden, setShowHidden] = useState(false);
-
-  const togglePath = (path) => {
-    setExpandedPaths(prev => ({ ...prev, [path]: !prev[path] }));
-  };
-
-  const isHidden = (name) => name.startsWith('.');
-
-  const renderStructure = (obj, path = '', level = 0) => {
-    if (!obj || typeof obj !== 'object') return null;
-
-    return Object.entries(obj)
-      .filter(([key]) => showHidden || !isHidden(key))
-      .map(([key, value]) => {
-        const currentPath = path ? `${path}/${key}` : key;
-        const isFolder = value !== 'file' && typeof value === 'object';
-        const isExpanded = expandedPaths[currentPath];
-
-        return (
-          <TreeNode
-            key={currentPath}
-            name={key}
-            isFolder={isFolder}
-            isExpanded={isExpanded}
-            onToggle={() => isFolder && togglePath(currentPath)}
-            level={level}
-          >
-            {isFolder && isExpanded && renderStructure(value, currentPath, level + 1)}
-          </TreeNode>
-        );
-      });
-  };
-
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Layers className="w-5 h-5 text-gray-500" />
-          <h3 className="font-semibold text-gray-900 dark:text-white">Project Structure</h3>
-        </div>
-        <button
-          onClick={() => setShowHidden(!showHidden)}
-          className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-        >
-          {showHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-          {showHidden ? 'Hide' : 'Show'} hidden
-        </button>
-      </div>
-      <div className="max-h-96 overflow-y-auto">
-        {renderStructure(structure)}
-      </div>
-    </div>
-  );
-};
 
 const ContextMenu = ({ isOpen, position, onClose, project, category }) => {
   if (!isOpen) return null;
