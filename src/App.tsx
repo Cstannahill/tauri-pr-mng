@@ -33,6 +33,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SettingsDialog } from './components/blocks/settings-dialog/settings-dialog';
 import { CreateProjectDialog } from './components/blocks/create-project-dialog/create-project-dialog';
 import { ProjectCard } from './components/blocks/project-card/project-card';
+import { FilterDropdown } from './components/blocks/filter-dropdown/filter-dropdown';
 
 // Tauri API - In real app, import from '@tauri-apps/api'
 const invoke = window.__TAURI__?.invoke || ((cmd, args) => {
@@ -362,75 +363,7 @@ const ContextMenu = ({ isOpen, position, onClose, project, category }) => {
 };
 
 
-const FilterDropdown = ({ isOpen, onClose, filters, onFiltersChange }) => {
-  if (!isOpen) return null;
 
-  return (
-    <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
-      <div className="p-4 space-y-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white">Filters</h3>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Project Type
-          </label>
-          <div className="space-y-2">
-            {['all', 'rust', 'tauri', 'react', 'next', 'node', 'python'].map(type => (
-              <label key={type} className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={filters.types.includes(type)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      onFiltersChange({
-                        ...filters,
-                        types: [...filters.types, type]
-                      });
-                    } else {
-                      onFiltersChange({
-                        ...filters,
-                        types: filters.types.filter(t => t !== type)
-                      });
-                    }
-                  }}
-                  className="mr-2"
-                />
-                <span className="text-sm capitalize">{type}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={filters.starredOnly}
-              onChange={(e) => onFiltersChange({ ...filters, starredOnly: e.target.checked })}
-              className="mr-2"
-            />
-            <span className="text-sm">Starred only</span>
-          </label>
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => onFiltersChange({ types: ['all'], starredOnly: false })}
-            className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700"
-          >
-            Clear
-          </button>
-          <button
-            onClick={onClose}
-            className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Apply
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const ProjectManager = () => {
   const [projects, setProjects] = useState({});
@@ -664,7 +597,7 @@ const ProjectManager = () => {
             </button>
             
             <FilterDropdown
-              isOpen={showFilters}
+              open={showFilters}
               onClose={() => setShowFilters(false)}
               filters={filters}
               onFiltersChange={setFilters}
