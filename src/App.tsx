@@ -29,7 +29,7 @@ import {
   EyeOff
 } from 'lucide-react';
 
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { NotificationAlert } from './components/blocks/notification-alert/notification-alert';
 import { SettingsDialog } from './components/blocks/settings-dialog/settings-dialog';
 import { CreateProjectDialog } from './components/blocks/create-project-dialog/create-project-dialog';
 import { ProjectCard } from './components/blocks/project-card/project-card';
@@ -655,23 +655,7 @@ const ProjectManager = () => {
       />
 
       {/* Notification */}
-      {notification && (
-        <div className="fixed bottom-4 right-4 z-50">
-          <Alert className={`${
-            notification.type === 'error' ? 'border-red-200 bg-red-50 dark:bg-red-900/20' :
-            notification.type === 'success' ? 'border-green-200 bg-green-50 dark:bg-green-900/20' :
-            'border-blue-200 bg-blue-50 dark:bg-blue-900/20'
-          }`}>
-            <AlertDescription className={`${
-              notification.type === 'error' ? 'text-red-800 dark:text-red-200' :
-              notification.type === 'success' ? 'text-green-800 dark:text-green-200' :
-              'text-blue-800 dark:text-blue-200'
-            }`}>
-              {notification.message}
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
+      <NotificationAlert notification={notification} />
     </div>
   );
 };
