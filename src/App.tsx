@@ -32,6 +32,7 @@ import { ProjectStructureView } from './components/blocks/project-structure-view
 import { ProjectContextMenu } from './components/blocks/project-context-menu/project-context-menu';
 import { CategorySidebar } from './components/blocks/category-sidebar/category-sidebar';
 import { SearchFilterBar } from './components/blocks/search-filter-bar/search-filter-bar';
+import { HeaderBar } from './components/blocks/header-bar/header-bar';
 
 // Tauri API - In real app, import from '@tauri-apps/api'
 const invoke = window.__TAURI__?.invoke || ((cmd, args) => {
@@ -358,38 +359,13 @@ const ProjectManager = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Code className="w-8 h-8 text-blue-600" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Project Manager</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {baseDir} • {getTotalProjectCount()} projects • {getStarredProjectCount()} starred
-              </p>
-            </div>
-          </div>
-          {/* <SettingsDialog /> */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              New Project
-            </button>
-            
-            <button
-              onClick={refreshProjects}
-              className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <RefreshCw className="w-5 h-5" />
-            </button>
-            
-            <SettingsDialog />
-          </div>
-        </div>
-      </div>
+      <HeaderBar
+        baseDir={baseDir}
+        totalProjects={getTotalProjectCount()}
+        starredProjects={getStarredProjectCount()}
+        onNewProject={() => setShowCreateModal(true)}
+        onRefresh={refreshProjects}
+      />
 
       {/* Search and Filters */}
       <SearchFilterBar
