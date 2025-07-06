@@ -11,8 +11,6 @@ import {
   Package,
   ChevronRight,
   ChevronDown,
-  Search,
-  Filter,
   RefreshCw,
   GitBranch,
   Calendar,
@@ -29,11 +27,11 @@ import { NotificationAlert } from './components/blocks/notification-alert/notifi
 import { SettingsDialog } from './components/blocks/settings-dialog/settings-dialog';
 import { CreateProjectDialog } from './components/blocks/create-project-dialog/create-project-dialog';
 import { ProjectCard } from './components/blocks/project-card/project-card';
-import { FilterDropdown } from './components/blocks/filter-dropdown/filter-dropdown';
 import { ProjectDetailsSidebar } from './components/blocks/project-details-sidebar/project-details-sidebar';
 import { ProjectStructureView } from './components/blocks/project-structure-view/project-structure-view';
 import { ProjectContextMenu } from './components/blocks/project-context-menu/project-context-menu';
 import { CategorySidebar } from './components/blocks/category-sidebar/category-sidebar';
+import { SearchFilterBar } from './components/blocks/search-filter-bar/search-filter-bar';
 
 // Tauri API - In real app, import from '@tauri-apps/api'
 const invoke = window.__TAURI__?.invoke || ((cmd, args) => {
@@ -202,7 +200,6 @@ const ProjectManager = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({ types: ['all'], starredOnly: false });
   const [baseDir, setBaseDir] = useState('');
   const [notification, setNotification] = useState(null);
@@ -395,43 +392,12 @@ const ProjectManager = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search projects..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div className="relative">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              <Filter className="w-4 h-4" />
-              Filters
-              {(filters.types.length > 1 || filters.starredOnly) && (
-                <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-1">
-                  {filters.types.length > 1 ? filters.types.length - 1 : 0}
-                  {filters.starredOnly ? '+' : ''}
-                </span>
-              )}
-            </button>
-            
-            <FilterDropdown
-              open={showFilters}
-              onClose={() => setShowFilters(false)}
-              filters={filters}
-              onFiltersChange={setFilters}
-            />
-          </div>
-        </div>
-      </div>
+      <SearchFilterBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filters={filters}
+        onFiltersChange={setFilters}
+      />
 
       {/* Main Content */}
       <div className="flex">
