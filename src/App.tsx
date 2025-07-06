@@ -33,6 +33,7 @@ import { ProjectContextMenu } from './components/blocks/project-context-menu/pro
 import { CategorySidebar } from './components/blocks/category-sidebar/category-sidebar';
 import { SearchFilterBar } from './components/blocks/search-filter-bar/search-filter-bar';
 import { HeaderBar } from './components/blocks/header-bar/header-bar';
+import { EmptyState } from './components/blocks/empty-state/empty-state';
 
 // Tauri API - In real app, import from '@tauri-apps/api'
 const invoke = window.__TAURI__?.invoke || ((cmd, args) => {
@@ -417,35 +418,25 @@ const ProjectManager = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <Package className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    No projects found
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400 mb-6">
-                    {searchQuery || filters.types.length > 1 || filters.starredOnly
+                <EmptyState
+                  icon={<Package className="w-16 h-16" />}
+                  title="No projects found"
+                  description={
+                    searchQuery || filters.types.length > 1 || filters.starredOnly
                       ? "No projects match your current filters."
-                      : "Create your first project to get started."}
-                  </p>
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Create New Project
-                  </button>
-                </div>
+                      : "Create your first project to get started."
+                  }
+                  actionLabel="Create New Project"
+                  onAction={() => setShowCreateModal(true)}
+                />
               )}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <Folder className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                Select a category
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400">
-                Choose a category from the sidebar to view your projects.
-              </p>
-            </div>
+            <EmptyState
+              icon={<Folder className="w-16 h-16" />}
+              title="Select a category"
+              description="Choose a category from the sidebar to view your projects."
+            />
           )}
         </div>
 
