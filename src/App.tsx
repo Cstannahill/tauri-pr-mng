@@ -34,6 +34,7 @@ import { SettingsDialog } from './components/blocks/settings-dialog/settings-dia
 import { CreateProjectDialog } from './components/blocks/create-project-dialog/create-project-dialog';
 import { ProjectCard } from './components/blocks/project-card/project-card';
 import { FilterDropdown } from './components/blocks/filter-dropdown/filter-dropdown';
+import { ProjectDetailsSidebar } from './components/blocks/project-details-sidebar/project-details-sidebar';
 
 // Tauri API - In real app, import from '@tauri-apps/api'
 const invoke = window.__TAURI__?.invoke || ((cmd, args) => {
@@ -709,84 +710,17 @@ const ProjectManager = () => {
 
         {/* Project Details Sidebar */}
         {selectedProject && (
-          <div className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 p-4 overflow-y-auto">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Project Details
-                </h3>
-                <button
-                  onClick={() => setSelectedProject(null)}
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-                    {selectedProject.name}
-                  </h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {selectedProject.path}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Type</p>
-                    <div className="flex items-center gap-2">
-                      <ProjectTypeIcon type={selectedProject.project_type} />
-                      <span className="text-sm font-medium">{selectedProject.project_type}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Git Status</p>
-                    <GitStatusIndicator status={selectedProject.git_status} />
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Last Modified</p>
-                  <p className="text-sm font-medium">{formatDate(selectedProject.last_modified)}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Size</p>
-                    <p className="text-sm font-medium">{formatFileSize(selectedProject.size)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Files</p>
-                    <p className="text-sm font-medium">{selectedProject.files_count}</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => invoke('open_project_in_editor', { projectPath: selectedProject.path, editor: 'vscode' })}
-                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <Code className="w-4 h-4" />
-                    Open
-                  </button>
-                  <button
-                    onClick={() => invoke('open_project_in_terminal', { projectPath: selectedProject.path })}
-                    className="flex-1 flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-600 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Terminal className="w-4 h-4" />
-                    Terminal
-                  </button>
-                </div>
-              </div>
-
-              <ProjectStructureView 
-                project={selectedProject} 
-                structure={projectStructure} 
-              />
-            </div>
-          </div>
+          <ProjectDetailsSidebar
+            project={selectedProject}
+            structure={projectStructure}
+            onClose={() => setSelectedProject(null)}
+            invoke={invoke}
+            ProjectTypeIcon={ProjectTypeIcon}
+            GitStatusIndicator={GitStatusIndicator}
+            formatFileSize={formatFileSize}
+            formatDate={formatDate}
+            ProjectStructureView={ProjectStructureView}
+          />
         )}
       </div>
 
