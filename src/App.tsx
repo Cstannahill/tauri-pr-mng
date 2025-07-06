@@ -3,14 +3,12 @@ import {
   Folder, 
   FolderOpen, 
   File, 
-  Plus, 
-  Settings, 
-  Terminal, 
+  Plus,
+  Terminal,
   Code, 
   Globe, 
   Monitor,
   Package,
-  MoreHorizontal,
   ChevronRight,
   ChevronDown,
   Search,
@@ -22,15 +20,11 @@ import {
   Copy,
   GitBranch,
   Calendar,
-  HardDrive,
-  Files,
   Zap,
   Database,
   Cpu,
   Layers,
   X,
-  Star,
-  StarOff,
   Eye,
   EyeOff
 } from 'lucide-react';
@@ -38,6 +32,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SettingsDialog } from './components/blocks/settings-dialog/settings-dialog';
 import { CreateProjectDialog } from './components/blocks/create-project-dialog/create-project-dialog';
+import { ProjectCard } from './components/blocks/project-card/project-card';
 
 // Tauri API - In real app, import from '@tauri-apps/api'
 const invoke = window.__TAURI__?.invoke || ((cmd, args) => {
@@ -226,77 +221,6 @@ const TreeNode = ({ name, isFolder, isExpanded, onToggle, children, level = 0, i
   );
 };
 
-const ProjectCard = ({ project, category, onSelect, onContextMenu, isSelected, onToggleStar }) => {
-  return (
-    <div 
-      className={`group bg-white dark:bg-gray-800 rounded-lg border-2 transition-all duration-200 cursor-pointer hover:shadow-lg ${
-        isSelected 
-          ? 'border-blue-500 shadow-md' 
-          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-      }`}
-      onClick={() => onSelect(project, category)}
-      onContextMenu={(e) => onContextMenu(e, project, category)}
-    >
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <ProjectTypeIcon type={project.project_type} />
-            <h3 className="font-semibold text-gray-900 dark:text-white truncate">{project.name}</h3>
-          </div>
-          <div className="flex items-center gap-1">
-            <button 
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleStar(project, category);
-              }}
-            >
-              {project.starred ? (
-                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-              ) : (
-                <StarOff className="w-4 h-4 text-gray-400" />
-              )}
-            </button>
-            <button 
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-              onClick={(e) => {
-                e.stopPropagation();
-                onContextMenu(e, project, category);
-              }}
-            >
-              <MoreHorizontal className="w-4 h-4 text-gray-500" />
-            </button>
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs font-medium">
-              {project.project_type}
-            </span>
-            <GitStatusIndicator status={project.git_status} />
-          </div>
-          
-          <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-            <Calendar className="w-3 h-3" />
-            <span className="text-xs">{formatDate(project.last_modified)}</span>
-          </div>
-          
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-            <div className="flex items-center gap-1">
-              <HardDrive className="w-3 h-3" />
-              <span>{formatFileSize(project.size)}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Files className="w-3 h-3" />
-              <span>{project.files_count} files</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const ProjectStructureView = ({ project, structure }) => {
   const [expandedPaths, setExpandedPaths] = useState({});
@@ -802,15 +726,19 @@ const ProjectManager = () => {
               {filteredProjects[selectedCategory]?.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredProjects[selectedCategory].map(project => (
-                    <ProjectCard
-                      key={project.path}
-                      project={project}
-                      category={selectedCategory}
-                      onSelect={handleProjectSelect}
-                      onContextMenu={handleContextMenu}
-                      onToggleStar={handleToggleStar}
-                      isSelected={selectedProject?.path === project.path}
-                    />
+                  <ProjectCard
+                    key={project.path}
+                    project={project}
+                    category={selectedCategory}
+                    onSelect={handleProjectSelect}
+                    onContextMenu={handleContextMenu}
+                    onToggleStar={handleToggleStar}
+                    isSelected={selectedProject?.path === project.path}
+                    GitStatusIndicator={GitStatusIndicator}
+                    ProjectTypeIcon={ProjectTypeIcon}
+                    formatFileSize={formatFileSize}
+                    formatDate={formatDate}
+                  />
                   ))}
                 </div>
               ) : (
