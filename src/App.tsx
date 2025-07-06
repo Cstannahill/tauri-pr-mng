@@ -14,10 +14,6 @@ import {
   Search,
   Filter,
   RefreshCw,
-  ExternalLink,
-  Trash2,
-  Edit,
-  Copy,
   GitBranch,
   Calendar,
   Zap,
@@ -36,6 +32,7 @@ import { ProjectCard } from './components/blocks/project-card/project-card';
 import { FilterDropdown } from './components/blocks/filter-dropdown/filter-dropdown';
 import { ProjectDetailsSidebar } from './components/blocks/project-details-sidebar/project-details-sidebar';
 import { ProjectStructureView } from './components/blocks/project-structure-view/project-structure-view';
+import { ProjectContextMenu } from './components/blocks/project-context-menu/project-context-menu';
 
 // Tauri API - In real app, import from '@tauri-apps/api'
 const invoke = window.__TAURI__?.invoke || ((cmd, args) => {
@@ -193,92 +190,6 @@ const formatDate = (dateString) => {
   const date = new Date(dateString);
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
-
-
-const ContextMenu = ({ isOpen, position, onClose, project, category }) => {
-  if (!isOpen) return null;
-
-  const menuItems = [
-    { 
-      label: 'Open in VS Code', 
-      icon: <Code className="w-4 h-4" />, 
-      action: () => invoke('open_project_in_editor', { projectPath: project.path, editor: 'vscode' })
-    },
-    { 
-      label: 'Open in Terminal', 
-      icon: <Terminal className="w-4 h-4" />, 
-      action: () => invoke('open_project_in_terminal', { projectPath: project.path })
-    },
-    { 
-      label: 'Open in File Manager', 
-      icon: <Folder className="w-4 h-4" />, 
-      action: () => invoke('open_project_in_file_manager', { projectPath: project.path })
-    },
-    { 
-      label: 'Open in Browser', 
-      icon: <ExternalLink className="w-4 h-4" />, 
-      action: () => invoke('open_project_in_browser', { projectPath: project.path }),
-      show: ['react', 'next', 'vue', 'svelte'].includes(project.project_type)
-    },
-    { label: 'separator' },
-    { 
-      label: 'Copy Path', 
-      icon: <Copy className="w-4 h-4" />, 
-      action: () => navigator.clipboard.writeText(project.path)
-    },
-    { 
-      label: 'Rename Project', 
-      icon: <Edit className="w-4 h-4" />, 
-      action: () => console.log('Rename project', project.name)
-    },
-    { label: 'separator' },
-    { 
-      label: 'Delete Project', 
-      icon: <Trash2 className="w-4 h-4" />, 
-      action: () => console.log('Delete project', project.name),
-      danger: true
-    },
-  ];
-
-  return (
-    <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div 
-        className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-48 py-1"
-        style={{ left: position.x, top: position.y }}
-      >
-        {menuItems.map((item, index) => {
-          if (item.label === 'separator') {
-            return <div key={index} className="h-px bg-gray-200 dark:bg-gray-700 my-1" />;
-          }
-          
-          if (item.show === false) return null;
-          
-          return (
-            <button
-              key={index}
-              className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                item.danger 
-                  ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20' 
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-              onClick={() => {
-                item.action();
-                onClose();
-              }}
-            >
-              {item.icon}
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
-    </>
-  );
-};
-
-
-
 
 const ProjectManager = () => {
   const [projects, setProjects] = useState({});
@@ -639,12 +550,12 @@ const ProjectManager = () => {
       </div>
 
       {/* Context Menu */}
-      <ContextMenu
+      <ProjectContextMenu
         isOpen={contextMenu.isOpen}
         position={contextMenu.position}
         onClose={closeContextMenu}
         project={contextMenu.project}
-        category={contextMenu.category}
+        invoke={invoke}
       />
 
       {/* Create Project Dialog */}
