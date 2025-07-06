@@ -33,6 +33,7 @@ import { FilterDropdown } from './components/blocks/filter-dropdown/filter-dropd
 import { ProjectDetailsSidebar } from './components/blocks/project-details-sidebar/project-details-sidebar';
 import { ProjectStructureView } from './components/blocks/project-structure-view/project-structure-view';
 import { ProjectContextMenu } from './components/blocks/project-context-menu/project-context-menu';
+import { CategorySidebar } from './components/blocks/category-sidebar/category-sidebar';
 
 // Tauri API - In real app, import from '@tauri-apps/api'
 const invoke = window.__TAURI__?.invoke || ((cmd, args) => {
@@ -435,39 +436,12 @@ const ProjectManager = () => {
       {/* Main Content */}
       <div className="flex">
         {/* Sidebar */}
-        <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 min-h-screen">
-          <div className="p-4">
-            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-              Categories
-            </h2>
-            <div className="space-y-1">
-              {categories.map(category => {
-                const projectCount = filteredProjects[category.key]?.length || 0;
-                const isSelected = selectedCategory === category.key;
-                
-                return (
-                  <button
-                    key={category.key}
-                    onClick={() => setSelectedCategory(category.key)}
-                    className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
-                      isSelected 
-                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' 
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {category.icon}
-                      <span className="font-medium">{category.label}</span>
-                    </div>
-                    <span className="text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
-                      {projectCount}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        <CategorySidebar
+          categories={categories}
+          filteredProjects={filteredProjects}
+          selectedCategory={selectedCategory}
+          onSelect={setSelectedCategory}
+        />
 
         {/* Main Content Area */}
         <div className="flex-1 p-6">
