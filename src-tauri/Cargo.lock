@@ -2759,6 +2759,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "dirs",
+ "open",
  "serde",
  "serde_json",
  "tauri",
