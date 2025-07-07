@@ -1,5 +1,8 @@
-use std::{fs, path::{Path, PathBuf}};
 use serde::{Deserialize, Serialize};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 use tauri::{api::dialog::blocking::FileDialogBuilder, AppHandle};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -58,7 +61,9 @@ pub fn ensure_workspace(app: &AppHandle) -> Result<PathBuf, String> {
     });
 
     create_category_dirs(&base_dir).map_err(|e| e.to_string())?;
-    let cfg = WorkspaceConfig { base_dir: base_dir.clone() };
+    let cfg = WorkspaceConfig {
+        base_dir: base_dir.clone(),
+    };
     cfg.save(app).map_err(|e| e.to_string())?;
     Ok(base_dir)
 }
