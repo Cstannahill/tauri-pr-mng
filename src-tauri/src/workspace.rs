@@ -3,7 +3,8 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
-use tauri::{api::dialog::blocking::FileDialogBuilder, AppHandle};
+use tauri::{AppHandle, Manager};
+use rfd::FileDialog;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WorkspaceConfig {
@@ -50,7 +51,7 @@ pub fn ensure_workspace(app: &AppHandle) -> Result<PathBuf, String> {
         return Ok(cfg.base_dir);
     }
 
-    let selected = FileDialogBuilder::new()
+    let selected = FileDialog::new()
         .set_title("Select a workspace directory")
         .pick_folder();
 

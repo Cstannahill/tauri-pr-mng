@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 use crate::app_state::AppState;
 
