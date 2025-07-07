@@ -14,11 +14,18 @@ fn main() {
     tauri::Builder::default()
         .manage(Mutex::new(AppState::default()))
         .setup(|app| {
-            let base = workspace::ensure_workspace(app)?;
+            let handle = app.handle();
+            let base = workspace::ensure_workspace(&handle)?;
+            let base_str = base.to_string_lossy().into_owned();   // avoid holding a PathBuf borrow
+
+            // 1️⃣ keep the State<'_, Mutex<AppState>> alive
+            let app_state = app.state::<Mutex<AppState>>();       
+            
+            // 2️⃣ lock and mutate safely
             {
-                let mut state = app.state::<Mutex<AppState>>().lock().unwrap();
-                state.base_dir = base.to_string_lossy().to_string();
-            }
+                let mut state = app_state.lock().unwrap();
+                state.base_dir = base_str;
+            } // 3️⃣ guard drops here, mutex is unlocked
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

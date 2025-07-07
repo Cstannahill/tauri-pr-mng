@@ -5,7 +5,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::AppHandle;
 
-use crate::app_state::AppState;
 use crate::{file_ops, workspace};
 
 #[derive(Debug, Serialize, Deserialize)]

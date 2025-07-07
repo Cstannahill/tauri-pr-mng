@@ -1,7 +1,7 @@
 use std::sync::Mutex;
 use std::{
     fs,
-    path::{Path, PathBuf},
+    path::{PathBuf},
 };
 
 use tauri::{AppHandle, Manager};
