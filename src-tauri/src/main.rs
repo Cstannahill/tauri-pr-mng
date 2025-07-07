@@ -1,7 +1,7 @@
 // src-tauri/src/main.rs
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
 
@@ -13,6 +13,8 @@ struct Project {
     last_modified: String,
     size: u64,
     files_count: usize,
+    git_status: String,
+    starred: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -68,8 +70,9 @@ fn initialize_workspace(app_handle: tauri::AppHandle) -> Result<String, String> 
 fn scan_projects(base_dir: String) -> Result<HashMap<String, Vec<Project>>, String> {
     let mut projects_map = HashMap::new();
     let base_path = Path::new(&base_dir);
-    
+
     let categories = ["desktop-apps", "web-apps", "cli-apps", "other"];
+    let starred = load_starred_projects().unwrap_or_default();
     
     for category in categories.iter() {
         let category_path = base_path.join(category);
@@ -84,7 +87,7 @@ fn scan_projects(base_dir: String) -> Result<HashMap<String, Vec<Project>>, Stri
                 let path = entry.path();
                 
                 if path.is_dir() {
-                    let project = scan_project_directory(&path)?;
+                    let project = scan_project_directory(&path, &starred)?;
                     projects.push(project);
                 }
             }
@@ -96,7 +99,7 @@ fn scan_projects(base_dir: String) -> Result<HashMap<String, Vec<Project>>, Stri
     Ok(projects_map)
 }
 
-fn scan_project_directory(path: &Path) -> Result<Project, String> {
+fn scan_project_directory(path: &Path, starred_set: &HashSet<String>) -> Result<Project, String> {
     let name = path.file_name()
         .ok_or("Invalid project directory name")?
         .to_string_lossy()
@@ -110,6 +113,8 @@ fn scan_project_directory(path: &Path) -> Result<Project, String> {
     
     let project_type = detect_project_type(path);
     let (size, files_count) = calculate_directory_stats(path)?;
+    let git_status = get_git_status(path);
+    let starred = starred_set.contains(&path.to_string_lossy().to_string());
     
     Ok(Project {
         name,
@@ -118,6 +123,8 @@ fn scan_project_directory(path: &Path) -> Result<Project, String> {
         last_modified: format_system_time(last_modified),
         size,
         files_count,
+        git_status,
+        starred,
     })
 }
 
@@ -200,6 +207,88 @@ fn format_system_time(time: std::time::SystemTime) -> String {
         .unwrap_or_else(|| DateTime::from_timestamp(0, 0).unwrap());
     
     datetime.format("%Y-%m-%d %H:%M:%S").to_string()
+}
+
+fn get_git_status(path: &Path) -> String {
+    use std::process::Command;
+
+    if !path.join(".git").exists() {
+        return "clean".to_string();
+    }
+
+    let output = Command::new("git")
+        .args(["-C", path.to_str().unwrap_or(""), "status", "--porcelain", "--branch"])
+        .output();
+
+    if let Ok(out) = output {
+        if out.status.success() {
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            let mut state = "clean".to_string();
+            for (i, line) in stdout.lines().enumerate() {
+                if i == 0 && line.starts_with("##") {
+                    if line.contains("ahead") && line.contains("behind") {
+                        state = "diverged".into();
+                    } else if line.contains("ahead") {
+                        state = "ahead".into();
+                    } else if line.contains("behind") {
+                        state = "behind".into();
+                    }
+                } else if !line.trim().is_empty() {
+                    state = "modified".into();
+                    break;
+                }
+            }
+            return state;
+        }
+    }
+
+    "clean".to_string()
+}
+
+fn starred_file_path() -> Result<PathBuf, String> {
+    let mut path = dirs::data_dir().ok_or("Could not find data directory")?;
+    path.push("project-manager");
+    fs::create_dir_all(&path).map_err(|e| format!("Failed to create data dir: {}", e))?;
+    path.push("starred.json");
+    Ok(path)
+}
+
+fn load_starred_projects() -> Result<HashSet<String>, String> {
+    let file = starred_file_path()?;
+    if let Ok(data) = fs::read_to_string(&file) {
+        let list: HashSet<String> = serde_json::from_str(&data).unwrap_or_default();
+        Ok(list)
+    } else {
+        Ok(HashSet::new())
+    }
+}
+
+fn save_starred_projects(set: &HashSet<String>) -> Result<(), String> {
+    let file = starred_file_path()?;
+    let data = serde_json::to_string_pretty(set).map_err(|e| format!("Failed to serialize: {}", e))?;
+    fs::write(file, data).map_err(|e| format!("Failed to write starred file: {}", e))
+}
+
+#[tauri::command]
+fn toggle_project_star(project_path: String) -> Result<(), String> {
+    let mut starred = load_starred_projects()?;
+    if !starred.insert(project_path.clone()) {
+        starred.remove(&project_path);
+    }
+    save_starred_projects(&starred)?;
+    Ok(())
+}
+
+#[tauri::command]
+fn open_project_in_browser(project_path: String) -> Result<(), String> {
+    let path = Path::new(&project_path);
+    let target = if path.join("index.html").exists() {
+        path.join("index.html")
+    } else {
+        path.to_path_buf()
+    };
+
+    open::that(target).map_err(|e| format!("Failed to open browser: {}", e))
 }
 
 #[tauri::command]
@@ -380,6 +469,8 @@ fn main() {
             open_project_in_editor,
             open_project_in_terminal,
             open_project_in_file_manager,
+            open_project_in_browser,
+            toggle_project_star,
             get_project_structure
         ])
         .run(tauri::generate_context!())
