@@ -2,8 +2,11 @@
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
+
+mod workspace;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Project {
@@ -46,24 +49,8 @@ impl Default for AppState {
 
 #[tauri::command]
 fn initialize_workspace(app_handle: tauri::AppHandle) -> Result<String, String> {
-    let home_dir = dirs::home_dir().ok_or("Could not find home directory")?;
-    let base_path = home_dir.join("dev");
-    
-    // Create base directory if it doesn't exist
-    if !base_path.exists() {
-        fs::create_dir_all(&base_path).map_err(|e| format!("Failed to create base directory: {}", e))?;
-    }
-    
-    // Create category directories
-    let categories = ["desktop-apps", "web-apps", "cli-apps", "other"];
-    for category in categories.iter() {
-        let category_path = base_path.join(category);
-        if !category_path.exists() {
-            fs::create_dir_all(&category_path).map_err(|e| format!("Failed to create category directory {}: {}", category, e))?;
-        }
-    }
-    
-    Ok(base_path.to_string_lossy().to_string())
+    let base = workspace::ensure_workspace(&app_handle)?;
+    Ok(base.to_string_lossy().to_string())
 }
 
 #[tauri::command]
@@ -461,7 +448,15 @@ fn get_project_structure(project_path: String) -> Result<serde_json::Value, Stri
 
 fn main() {
     tauri::Builder::default()
-        .manage(AppState::default())
+        .manage(Mutex::new(AppState::default()))
+        .setup(|app| {
+            let base = workspace::ensure_workspace(app)?;
+            {
+                let mut state = app.state::<Mutex<AppState>>().lock().unwrap();
+                state.base_dir = base.to_string_lossy().to_string();
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             initialize_workspace,
             scan_projects,
