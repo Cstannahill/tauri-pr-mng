@@ -1,10 +1,11 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
+import ThemeToggle from '@/components/theme-toggle';
 
 const MainLayout = () => (
   <div className="min-h-screen flex flex-col">
-    <header className="border-b bg-white dark:bg-gray-800 px-4 py-2">
+    <header className="border-b bg-white dark:bg-gray-800 px-4 py-2 flex items-center justify-between">
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem>
@@ -37,6 +38,7 @@ const MainLayout = () => (
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
+      <ThemeToggle />
     </header>
     <main className="flex-1 bg-gray-50 dark:bg-gray-900">
       <Outlet />
