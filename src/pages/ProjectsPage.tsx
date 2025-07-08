@@ -25,21 +25,16 @@ import { CategorySidebar } from '@/components/blocks/category-sidebar/category-s
 import { SearchFilterBar } from '@/components/blocks/search-filter-bar/search-filter-bar';
 import { HeaderBar } from '@/components/blocks/header-bar/header-bar';
 import { EmptyState } from '@/components/blocks/empty-state/empty-state';
-
-// Tauri API - In real app, import from '@tauri-apps/api'
-const invoke = (window as any).__TAURI__?.invoke || ((cmd, args) => {
-  console.log('Tauri command:', cmd, args);
-  return Promise.resolve(mockData[cmd] || {});
-});
+import { invoke } from '@tauri-apps/api/core';
 
 // Mock data for development
 const mockData = {
   initialize_workspace: '/home/user/dev',
   scan_projects: {
     'desktop-apps': [
-      { 
-        name: 'project-manager', 
-        project_type: 'tauri', 
+      {
+        name: 'project-manager',
+        project_type: 'tauri',
         last_modified: '2024-01-15 14:30:00',
         size: 1024000,
         files_count: 45,
@@ -47,9 +42,9 @@ const mockData = {
         git_status: 'clean',
         starred: true
       },
-      { 
-        name: 'media-player', 
-        project_type: 'electron', 
+      {
+        name: 'media-player',
+        project_type: 'electron',
         last_modified: '2024-01-12 10:15:00',
         size: 2048000,
         files_count: 78,
@@ -59,9 +54,9 @@ const mockData = {
       },
     ],
     'web-apps': [
-      { 
-        name: 'portfolio-site', 
-        project_type: 'next', 
+      {
+        name: 'portfolio-site',
+        project_type: 'next',
         last_modified: '2024-01-14 16:45:00',
         size: 512000,
         files_count: 32,
@@ -69,9 +64,9 @@ const mockData = {
         git_status: 'ahead',
         starred: true
       },
-      { 
-        name: 'ecommerce-platform', 
-        project_type: 'react', 
+      {
+        name: 'ecommerce-platform',
+        project_type: 'react',
         last_modified: '2024-01-10 09:20:00',
         size: 3072000,
         files_count: 156,
@@ -81,9 +76,9 @@ const mockData = {
       },
     ],
     'cli-apps': [
-      { 
-        name: 'file-organizer', 
-        project_type: 'rust', 
+      {
+        name: 'file-organizer',
+        project_type: 'rust',
         last_modified: '2024-01-13 11:30:00',
         size: 256000,
         files_count: 12,
@@ -91,9 +86,9 @@ const mockData = {
         git_status: 'clean',
         starred: false
       },
-      { 
-        name: 'build-tool', 
-        project_type: 'node', 
+      {
+        name: 'build-tool',
+        project_type: 'node',
         last_modified: '2024-01-11 15:45:00',
         size: 768000,
         files_count: 34,
@@ -103,9 +98,9 @@ const mockData = {
       },
     ],
     'other': [
-      { 
-        name: 'research-notes', 
-        project_type: 'markdown', 
+      {
+        name: 'research-notes',
+        project_type: 'markdown',
         last_modified: '2024-01-09 08:15:00',
         size: 128000,
         files_count: 8,
@@ -240,9 +235,10 @@ const ProjectsPage = () => {
   const handleProjectSelect = async (project, category) => {
     setSelectedProject({ ...project, category });
     setSelectedCategory(category);
-    
+
     try {
-      const structure = await invoke('get_project_structure', { projectPath: project.path });
+      const project_path = project.path;
+      const structure = await invoke('get_project_structure', { project_path });
       setProjectStructure(structure);
     } catch (error) {
       console.error('Failed to get project structure:', error);
@@ -266,7 +262,10 @@ const ProjectsPage = () => {
 
   const handleCreateProject = async (category, name, type) => {
     try {
-      await invoke('create_project', { baseDir, category, name, projectType: type });
+      await invoke('create_project', {
+        base_dir: baseDir, category, name,
+        project_type: type
+      });
       await refreshProjects();
       showNotification(`Project "${name}" created successfully`, 'success');
     } catch (error) {
@@ -277,58 +276,58 @@ const ProjectsPage = () => {
 
   const handleToggleStar = async (project, category) => {
     try {
-      await invoke('toggle_project_star', { projectPath: project.path });
+      await invoke('toggle_project_star', { project_path: project.path });
       await refreshProjects();
       showNotification(`Project ${project.starred ? 'unstarred' : 'starred'}`, 'success');
     } catch (error) {
       console.error('Failed to toggle star:', error);
       showNotification('Failed to update project', 'error');
-      }
+    }
   };
 
   const filterProjects = (projectsData: Record<string, any[]>) => {
     if (!projectsData) return {};
-    
+
     const filtered = {};
-    
+
     Object.entries(projectsData).forEach(([category, projects]) => {
       const filteredProjects = projects.filter(project => {
         // Search filter
         if (searchQuery && !project.name.toLowerCase().includes(searchQuery.toLowerCase())) {
           return false;
         }
-        
+
         // Type filter
         if (!filters.types.includes('all') && !filters.types.includes(project.project_type)) {
           return false;
         }
-        
+
         // Starred filter
         if (filters.starredOnly && !project.starred) {
           return false;
         }
-        
+
         return true;
       });
-      
+
       if (filteredProjects.length > 0) {
         filtered[category] = filteredProjects;
       }
     });
-    
+
     return filtered;
   };
 
   const filteredProjects = filterProjects(projects);
 
   const getTotalProjectCount = () => {
-    return Object.values(projects).reduce((total, categoryProjects) => 
+    return Object.values(projects).reduce((total, categoryProjects) =>
       total + categoryProjects.length, 0
     );
   };
 
   const getStarredProjectCount = () => {
-    return Object.values(projects).reduce((total, categoryProjects) => 
+    return Object.values(projects).reduce((total, categoryProjects) =>
       total + categoryProjects.filter(p => p.starred).length, 0
     );
   };
@@ -389,19 +388,19 @@ const ProjectsPage = () => {
               {filteredProjects[selectedCategory]?.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredProjects[selectedCategory].map(project => (
-                  <ProjectCard
-                    key={project.path}
-                    project={project}
-                    category={selectedCategory}
-                    onSelect={handleProjectSelect}
-                    onContextMenu={handleContextMenu}
-                    onToggleStar={handleToggleStar}
-                    isSelected={selectedProject?.path === project.path}
-                    GitStatusIndicator={GitStatusIndicator}
-                    ProjectTypeIcon={ProjectTypeIcon}
-                    formatFileSize={formatFileSize}
-                    formatDate={formatDate}
-                  />
+                    <ProjectCard
+                      key={project.path}
+                      project={project}
+                      category={selectedCategory}
+                      onSelect={handleProjectSelect}
+                      onContextMenu={handleContextMenu}
+                      onToggleStar={handleToggleStar}
+                      isSelected={selectedProject?.path === project.path}
+                      GitStatusIndicator={GitStatusIndicator}
+                      ProjectTypeIcon={ProjectTypeIcon}
+                      formatFileSize={formatFileSize}
+                      formatDate={formatDate}
+                    />
                   ))}
                 </div>
               ) : (
