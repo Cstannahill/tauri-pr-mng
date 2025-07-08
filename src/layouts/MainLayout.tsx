@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
-import ThemeToggle from '@/components/theme-toggle';
+import ThemeToggle from '@/components/theme/theme-toggle';
 
 const MainLayout = () => (
   <div className="min-h-screen flex flex-col">

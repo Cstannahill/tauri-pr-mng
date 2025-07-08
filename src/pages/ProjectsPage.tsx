@@ -15,16 +15,16 @@ import {
   Cpu
 } from 'lucide-react';
 
-import { NotificationAlert } from '@/components/blocks/notification-alert/notification-alert';
-import { CreateProjectDialog } from '@/components/blocks/create-project-dialog/create-project-dialog';
-import { ProjectCard } from '@/components/blocks/project-card/project-card';
-import { ProjectDetailsSidebar } from '@/components/blocks/project-details-sidebar/project-details-sidebar';
-import { ProjectStructureView } from '@/components/blocks/project-structure-view/project-structure-view';
-import { ProjectContextMenu } from '@/components/blocks/project-context-menu/project-context-menu';
-import { CategorySidebar } from '@/components/blocks/category-sidebar/category-sidebar';
-import { SearchFilterBar } from '@/components/blocks/search-filter-bar/search-filter-bar';
-import { HeaderBar } from '@/components/blocks/header-bar/header-bar';
-import { EmptyState } from '@/components/blocks/empty-state/empty-state';
+import { NotificationAlert } from '@/components/notification-alert/notification-alert';
+import { CreateProjectDialog } from '@/components/projects/create-project-dialog';
+import { ProjectCard } from '@/components/projects/project-card';
+import { ProjectDetailsSidebar } from '@/components/projects/project-details-sidebar';
+import { ProjectStructureView } from '@/components/projects/project-structure-view';
+import { ProjectContextMenu } from '@/components/projects/project-context-menu';
+import { CategorySidebar } from '@/components/projects/category-sidebar';
+import { SearchFilterBar } from '@/components/search-filter/search-filter-bar';
+import { HeaderBar } from '@/components/header-bar/header-bar';
+import { EmptyState } from '@/components/empty-state/empty-state';
 import { invoke } from '@tauri-apps/api/core';
 
 // Mock data for development
