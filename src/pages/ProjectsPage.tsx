@@ -237,8 +237,8 @@ const ProjectsPage = () => {
     setSelectedCategory(category);
 
     try {
-      const project_path = project.path;
-      const structure = await invoke('get_project_structure', { project_path });
+      const projectPath = project.path;
+      const structure = await invoke('get_project_structure', { projectPath });
       setProjectStructure(structure);
     } catch (error) {
       console.error('Failed to get project structure:', error);
@@ -263,8 +263,8 @@ const ProjectsPage = () => {
   const handleCreateProject = async (category, name, type) => {
     try {
       await invoke('create_project', {
-        base_dir: baseDir, category, name,
-        project_type: type
+        baseDir: baseDir, category, name,
+        projectType: type
       });
       await refreshProjects();
       showNotification(`Project "${name}" created successfully`, 'success');

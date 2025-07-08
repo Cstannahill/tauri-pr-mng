@@ -28,6 +28,7 @@ fn main() {
             } // 3️⃣ guard drops here, mutex is unlocked
             Ok(())
         })
+        .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
             initialize_workspace,
             scan_projects,
