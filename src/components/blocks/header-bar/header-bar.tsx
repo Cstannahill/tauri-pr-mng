@@ -19,13 +19,13 @@ export function HeaderBar({
   onRefresh,
 }: HeaderBarProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+    <div className="bg-card border-b border-border p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Code className="w-8 h-8 text-blue-600" />
+          <Code className="w-8 h-8 text-primary" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Project Manager</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <h1 className="text-2xl font-bold">Project Manager</h1>
+            <p className="text-sm text-muted-foreground">
               {baseDir} • {totalProjects} projects • {starredProjects} starred
             </p>
           </div>

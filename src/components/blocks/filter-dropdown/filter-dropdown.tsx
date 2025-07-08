@@ -21,11 +21,11 @@ export function FilterDropdown({ open, onClose, filters, onFiltersChange }: Filt
   };
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
+    <div className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-lg shadow-lg z-50">
       <div className="p-4 space-y-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white">Filters</h3>
+        <h3 className="font-semibold">Filters</h3>
         <div>
-          <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <p className="block text-sm font-medium text-muted-foreground mb-2">
             Project Type
           </p>
           <div className="space-y-2">

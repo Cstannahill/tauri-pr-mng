@@ -140,8 +140,8 @@ const ProjectTypeIcon = ({ type }) => {
     'node': <Terminal className="w-4 h-4 text-green-500" />,
     'python': <Database className="w-4 h-4 text-yellow-500" />,
     'go': <Cpu className="w-4 h-4 text-cyan-500" />,
-    'markdown': <File className="w-4 h-4 text-gray-500" />,
-    'unknown': <Package className="w-4 h-4 text-gray-400" />
+    'markdown': <File className="w-4 h-4 text-muted-foreground" />,
+    'unknown': <Package className="w-4 h-4 text-muted-foreground" />
   };
   return icons[type] || icons.unknown;
 };
@@ -334,17 +334,17 @@ const ProjectsPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <RefreshCw className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading projects...</p>
+          <p className="text-muted-foreground">Loading projects...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <HeaderBar
         baseDir={baseDir}
@@ -377,10 +377,10 @@ const ProjectsPage = () => {
           {selectedCategory ? (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-semibold">
                   {categories.find(c => c.key === selectedCategory)?.label}
                 </h2>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-sm text-muted-foreground">
                   {filteredProjects[selectedCategory]?.length || 0} projects
                 </span>
               </div>

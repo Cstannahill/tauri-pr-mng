@@ -5,7 +5,7 @@ import ThemeToggle from '@/components/theme-toggle';
 
 const MainLayout = () => (
   <div className="min-h-screen flex flex-col">
-    <header className="border-b bg-white dark:bg-gray-800 px-4 py-2 flex items-center justify-between">
+    <header className="border-b border-border bg-sidebar text-sidebar-foreground px-4 py-2 flex items-center justify-between">
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem>
@@ -40,7 +40,7 @@ const MainLayout = () => (
       </NavigationMenu>
       <ThemeToggle />
     </header>
-    <main className="flex-1 bg-gray-50 dark:bg-gray-900">
+    <main className="flex-1 bg-background">
       <Outlet />
     </main>
   </div>

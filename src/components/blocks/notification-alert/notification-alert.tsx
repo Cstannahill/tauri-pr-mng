@@ -13,15 +13,15 @@ export function NotificationAlert({ notification }: NotificationAlertProps) {
   if (!notification) return null;
 
   const alertClasses: Record<string, string> = {
-    error: "border-red-200 bg-red-50 dark:bg-red-900/20",
-    success: "border-green-200 bg-green-50 dark:bg-green-900/20",
-    info: "border-blue-200 bg-blue-50 dark:bg-blue-900/20",
+    error: "border-destructive/20 bg-destructive/10",
+    success: "border-green-600/20 bg-green-500/10",
+    info: "border-primary/20 bg-primary/10",
   };
 
   const descriptionClasses: Record<string, string> = {
-    error: "text-red-800 dark:text-red-200",
-    success: "text-green-800 dark:text-green-200",
-    info: "text-blue-800 dark:text-blue-200",
+    error: "text-destructive",
+    success: "text-green-700",
+    info: "text-primary",
   };
 
   const variant = notification.type ?? "info";
