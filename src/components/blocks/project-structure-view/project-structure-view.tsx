@@ -40,7 +40,7 @@ function TreeNode({
   return (
     <div>
       <div
-        className={`flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer rounded-md transition-colors ${level > 0 ? "ml-4" : ""}`}
+        className={`flex items-center gap-2 p-2 hover:bg-muted cursor-pointer rounded-md transition-colors ${level > 0 ? "ml-4" : ""}`}
         onClick={onToggle}
       >
         {isFolder && (
@@ -50,9 +50,9 @@ function TreeNode({
         )}
         {icon ||
           (isFolder ? (
-            isExpanded ? <FolderOpen className="w-4 h-4 text-blue-500" /> : <Folder className="w-4 h-4 text-blue-500" />
+            isExpanded ? <FolderOpen className="w-4 h-4 text-primary" /> : <Folder className="w-4 h-4 text-primary" />
           ) : (
-            <File className="w-4 h-4 text-gray-500" />
+            <File className="w-4 h-4 text-muted-foreground" />
           ))}
         <span className="text-sm font-medium">{name}</span>
       </div>
@@ -100,14 +100,14 @@ export function ProjectStructureView({ project, structure }: ProjectStructureVie
     <Card className="p-4">
       <CardHeader className="p-0 mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Layers className="w-5 h-5 text-gray-500" />
+          <Layers className="w-5 h-5 text-muted-foreground" />
           <CardTitle className="text-base">Project Structure</CardTitle>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setShowHidden(!showHidden)}
-          className="gap-1 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+          className="gap-1 text-xs text-muted-foreground hover:text-foreground"
         >
           {showHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
           {showHidden ? "Hide" : "Show"} hidden

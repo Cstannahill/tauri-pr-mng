@@ -46,8 +46,8 @@ export function ProjectCard({
     <Card
       className={`group cursor-pointer border-2 transition-all duration-200 hover:shadow-lg ${
         isSelected
-          ? "border-blue-500 shadow-md"
-          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+          ? "border-primary shadow-md"
+          : "border-border hover:border-muted"
       }`}
       onClick={() => onSelect(project, category)}
       onContextMenu={(e) => onContextMenu(e, project, category)}
@@ -71,7 +71,7 @@ export function ProjectCard({
               {project.starred ? (
                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
               ) : (
-                <StarOff className="w-4 h-4 text-gray-400" />
+                <StarOff className="w-4 h-4 text-muted-foreground" />
               )}
             </Button>
             <Button
@@ -83,7 +83,7 @@ export function ProjectCard({
                 onContextMenu(e, project, category);
               }}
             >
-              <MoreHorizontal className="w-4 h-4 text-gray-500" />
+              <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
             </Button>
           </div>
         </div>

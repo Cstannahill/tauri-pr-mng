@@ -35,11 +35,11 @@ export function ProjectDetailsSidebar({
   ProjectStructureView,
 }: ProjectDetailsSidebarProps) {
   return (
-    <aside className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700">
+    <aside className="w-80 bg-sidebar text-sidebar-foreground border-l border-border">
       <ScrollArea className="h-full p-4">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Project Details</h3>
+            <h3 className="text-lg font-semibold">Project Details</h3>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="w-4 h-4" />
             </Button>
@@ -47,36 +47,36 @@ export function ProjectDetailsSidebar({
 
           <div className="space-y-4">
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">{project.name}</h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400 break-all">{project.path}</p>
+              <h4 className="font-medium mb-2">{project.name}</h4>
+              <p className="text-sm text-muted-foreground break-all">{project.path}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Type</p>
+                <p className="text-xs text-muted-foreground">Type</p>
                 <div className="flex items-center gap-2">
                   <ProjectTypeIcon type={project.project_type} />
                   <span className="text-sm font-medium">{project.project_type}</span>
                 </div>
               </div>
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Git Status</p>
+                <p className="text-xs text-muted-foreground">Git Status</p>
                 <GitStatusIndicator status={project.git_status} />
               </div>
             </div>
 
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Last Modified</p>
+              <p className="text-xs text-muted-foreground">Last Modified</p>
               <p className="text-sm font-medium">{formatDate(project.last_modified)}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Size</p>
+                <p className="text-xs text-muted-foreground">Size</p>
                 <p className="text-sm font-medium">{formatFileSize(project.size)}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Files</p>
+                <p className="text-xs text-muted-foreground">Files</p>
                 <p className="text-sm font-medium">{project.files_count}</p>
               </div>
             </div>
