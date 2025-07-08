@@ -431,10 +431,29 @@ pub fn get_project_structure(project_path: String) -> Result<serde_json::Value, 
         }
 
         let mut tree = serde_json::Map::new();
-        let entries = fs::read_dir(path).map_err(|e| format!("Failed to read directory: {}", e))?;
+        let mut entries: Vec<_> = fs::read_dir(path)
+            .map_err(|e| format!("Failed to read directory: {}", e))?
+            .filter_map(|e| e.ok())
+            .collect();
+
+        entries.sort_by(|a, b| {
+            let a_path = a.path();
+            let b_path = b.path();
+            let a_is_dir = a_path.is_dir();
+            let b_is_dir = b_path.is_dir();
+            if a_is_dir && !b_is_dir {
+                std::cmp::Ordering::Less
+            } else if !a_is_dir && b_is_dir {
+                std::cmp::Ordering::Greater
+            } else {
+                a.file_name()
+                    .to_string_lossy()
+                    .to_lowercase()
+                    .cmp(&b.file_name().to_string_lossy().to_lowercase())
+            }
+        });
 
         for entry in entries {
-            let entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
             let path = entry.path();
             let name = path.file_name().unwrap().to_string_lossy().to_string();
 

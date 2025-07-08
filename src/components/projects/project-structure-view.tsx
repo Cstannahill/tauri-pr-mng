@@ -74,9 +74,17 @@ export function ProjectStructureView({ project, structure }: ProjectStructureVie
   const renderStructure = (obj: any, path = "", level = 0): React.ReactNode => {
     if (!obj || typeof obj !== "object") return null
 
-    return Object.entries(obj)
+    const entries = Object.entries(obj)
       .filter(([key]) => showHidden || !isHidden(key))
-      .map(([key, value]) => {
+      .sort(([aKey, aValue], [bKey, bValue]) => {
+        const aIsFolder = aValue !== "file" && typeof aValue === "object"
+        const bIsFolder = bValue !== "file" && typeof bValue === "object"
+        if (aIsFolder && !bIsFolder) return -1
+        if (!aIsFolder && bIsFolder) return 1
+        return aKey.localeCompare(bKey)
+      })
+
+    return entries.map(([key, value]) => {
         const currentPath = path ? `${path}/${key}` : key
         const isFolder = value !== "file" && typeof value === "object"
         const isExpanded = expandedPaths[currentPath]
