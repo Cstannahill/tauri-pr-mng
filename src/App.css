@@ -234,13 +234,3 @@ button {
   }
 }
 
-:root {
-  --sidebar: hsl(0 0% 100%);
-  --sidebar-foreground: hsl(222.2 47.4% 11.2%);
-  --sidebar-primary: hsl(243 75% 59%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(222.2 47.4% 11.2%);
-  --sidebar-border: hsl(240 5% 90%);
-  --sidebar-ring: hsl(243 75% 59%);
-}
