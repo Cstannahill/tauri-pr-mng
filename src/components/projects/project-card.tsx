@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import React from "react";
+import { getProjectTypeLabel } from "@/lib/projectTypes";
 
 export interface ProjectCardProps {
   project: {
@@ -89,7 +90,7 @@ export function ProjectCard({
         </div>
         <div className="flex items-center justify-between text-sm">
           <Badge variant="outline" className="capitalize">
-            {project.project_type}
+            {getProjectTypeLabel(project.project_type)}
           </Badge>
           <GitStatusIndicator status={project.git_status} />
         </div>
