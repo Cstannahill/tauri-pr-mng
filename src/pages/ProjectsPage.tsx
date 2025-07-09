@@ -212,7 +212,7 @@ const ProjectsPage = () => {
       setIsLoading(true);
       const workspaceDir = await invoke('initialize_workspace');
       setBaseDir(workspaceDir);
-      await refreshProjects();
+      await refreshProjects(workspaceDir);
     } catch (error) {
       console.error('Failed to initialize app:', error);
       showNotification('Failed to initialize workspace', 'error');
@@ -221,9 +221,9 @@ const ProjectsPage = () => {
     }
   };
 
-  const refreshProjects = async () => {
+  const refreshProjects = async (dir: string = baseDir) => {
     try {
-      const projectsData = await invoke('scan_projects', { baseDir });
+      const projectsData = await invoke('scan_projects', { baseDir: dir });
       setProjects(projectsData);
     } catch (error) {
       console.error('Failed to scan projects:', error);
