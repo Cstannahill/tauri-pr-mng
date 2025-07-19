@@ -1,3 +1,19 @@
+use crate::app_state::AppState;
+use tauri::{State};
+use std::sync::Mutex;
+#[tauri::command]
+pub fn create_category(app_handle: tauri::AppHandle, name: String, state: State<'_, Mutex<AppState>>) -> Result<(), String> {
+    let mut app_state = state.lock().map_err(|_| "Failed to lock app state".to_string())?;
+    let base_dir = &app_state.base_dir;
+    let category_path = std::path::Path::new(base_dir).join(&name);
+    std::fs::create_dir_all(&category_path).map_err(|e| format!("Failed to create category directory: {}", e))?;
+
+    if !app_state.categories.contains(&name) {
+        app_state.categories.push(name.clone());
+        // If you want to persist categories to disk, do it here
+    }
+    Ok(())
+}
 // backend/mod.rs - shared backend commands for Tauri
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -36,9 +52,24 @@ pub fn initialize_workspace(app_handle: AppHandle) -> Result<String, String> {
 pub fn scan_projects(base_dir: String) -> Result<HashMap<String, Vec<Project>>, String> {
     let mut projects_map = HashMap::new();
     let base_path = Path::new(&base_dir);
-
-    let categories = ["desktop-apps", "web-apps", "cli-apps", "other"];
     let starred = load_starred_projects().unwrap_or_default();
+
+    // Dynamically find all subdirectories (categories)
+    let categories = match fs::read_dir(base_path) {
+        Ok(entries) => entries
+            .filter_map(|entry| {
+                entry.ok().and_then(|e| {
+                    let path = e.path();
+                    if path.is_dir() {
+                        path.file_name().map(|n| n.to_string_lossy().to_string())
+                    } else {
+                        None
+                    }
+                })
+            })
+            .collect::<Vec<_>>(),
+        Err(_) => vec![],
+    };
 
     for category in categories.iter() {
         let category_path = base_path.join(category);

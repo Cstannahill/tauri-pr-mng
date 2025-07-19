@@ -71,8 +71,8 @@ export function ProjectContextMenu({
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div
-        className="fixed bg-card border border-border rounded-lg shadow-lg z-50 min-w-48 py-1"
-        style={{ left: position.x, top: position.y }}
+        className="fixed z-50 min-w-52 py-2 px-1 border border-border/60 rounded-xl shadow-2xl backdrop-blur-md bg-background/80 dark:bg-card/90"
+        style={{ left: position.x, top: position.y, boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18)' }}
       >
         {menuItems.map((item, index) => {
           if (item.label === "separator") {
@@ -83,19 +83,24 @@ export function ProjectContextMenu({
               <Button
                 key={index}
                 variant="ghost"
-                className={`w-full justify-start gap-3 px-4 py-2 text-sm font-normal ${
-                  item.danger
-                    ? "text-destructive hover:bg-destructive/10"
-                    : "hover:bg-muted"
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40
+                  ${item.danger
+                    ? "text-destructive hover:bg-destructive/15 dark:hover:bg-destructive/30 focus-visible:ring-destructive/40"
+                    : "hover:bg-primary/5 dark:hover:bg-muted/20 focus:bg-primary/10 dark:focus:bg-muted/30"}
+                `}
+                style={{
+                  justifyContent: 'flex-start',
+                  fontWeight: item.danger ? 600 : 500,
+                  letterSpacing: 0.01,
+                }}
                 onClick={() => {
-                item.action();
-                onClose();
-              }}
-            >
-              {item.icon}
-              {item.label}
-            </Button>
+                  item.action();
+                  onClose();
+                }}
+              >
+                {item.icon}
+                <span className="truncate">{item.label}</span>
+              </Button>
           );
         })}
       </div>

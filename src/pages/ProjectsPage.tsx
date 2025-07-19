@@ -210,7 +210,7 @@ const ProjectsPage = () => {
   const initializeApp = async () => {
     try {
       setIsLoading(true);
-      const workspaceDir = await invoke('initialize_workspace');
+      const workspaceDir = await invoke('initialize_workspace') as string;
       setBaseDir(workspaceDir);
       await refreshProjects(workspaceDir);
     } catch (error) {
@@ -223,7 +223,7 @@ const ProjectsPage = () => {
 
   const refreshProjects = async (dir: string = baseDir) => {
     try {
-      const projectsData = await invoke('scan_projects', { baseDir: dir });
+      const projectsData = await invoke('scan_projects', { baseDir: dir }) as Record<string, any[]>;
       setProjects(projectsData);
     } catch (error) {
       console.error('Failed to scan projects:', error);
@@ -363,13 +363,14 @@ const ProjectsPage = () => {
       />
 
       {/* Main Content */}
-      <div className="flex">
+          <div className="flex flex-col md:flex-row">
         {/* Sidebar */}
         <CategorySidebar
           categories={categories}
           filteredProjects={filteredProjects}
           selectedCategory={selectedCategory}
           onSelect={setSelectedCategory}
+          onRefresh={refreshProjects}
         />
 
         {/* Main Content Area */}
@@ -427,19 +428,21 @@ const ProjectsPage = () => {
         </div>
 
         {/* Project Details Sidebar */}
-        {selectedProject && (
-          <ProjectDetailsSidebar
-            project={selectedProject}
-            structure={projectStructure}
-            onClose={() => setSelectedProject(null)}
-            invoke={invoke}
-            ProjectTypeIcon={ProjectTypeIcon}
-            GitStatusIndicator={GitStatusIndicator}
-            formatFileSize={formatFileSize}
-            formatDate={formatDate}
-            ProjectStructureView={ProjectStructureView}
-          />
-        )}
+            {selectedProject && (
+              <div className="fixed inset-0 z-50 md:static md:z-auto md:w-80">
+                <ProjectDetailsSidebar
+                  project={selectedProject}
+                  structure={projectStructure}
+                  onClose={() => setSelectedProject(null)}
+                  invoke={invoke}
+                  ProjectTypeIcon={ProjectTypeIcon}
+                  GitStatusIndicator={GitStatusIndicator}
+                  formatFileSize={formatFileSize}
+                  formatDate={formatDate}
+                  ProjectStructureView={ProjectStructureView}
+                />
+              </div>
+            )}
       </div>
 
       {/* Context Menu */}

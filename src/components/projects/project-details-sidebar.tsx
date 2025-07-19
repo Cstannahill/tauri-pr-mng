@@ -36,9 +36,10 @@ export function ProjectDetailsSidebar({
   ProjectStructureView,
 }: ProjectDetailsSidebarProps) {
   return (
-    <aside className="w-80 bg-sidebar text-sidebar-foreground border-l border-border">
-      <ScrollArea className="h-full p-4">
-        <div className="space-y-6">
+    <aside className="w-full md:w-80 min-h-screen h-full flex flex-col md:fixed md:inset-y-0 md:right-0 z-40">
+      <div className="bg-sidebar text-sidebar-foreground border-l border-border flex flex-col flex-1 h-full">
+        <ScrollArea className="flex-1 p-4 overflow-y-auto">
+          <div className="space-y-6 flex flex-col min-h-0">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Project Details</h3>
             <Button variant="ghost" size="icon" onClick={onClose}>
@@ -101,9 +102,10 @@ export function ProjectDetailsSidebar({
             </div>
           </div>
 
-          <ProjectStructureView project={project} structure={structure} />
-        </div>
-      </ScrollArea>
+            <ProjectStructureView project={project} structure={structure} />
+          </div>
+        </ScrollArea>
+      </div>
     </aside>
   );
 }

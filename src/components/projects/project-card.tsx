@@ -54,20 +54,23 @@ export function ProjectCard({
       onContextMenu={(e) => onContextMenu(e, project, category)}
     >
       <CardContent className="p-4 space-y-2">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <ProjectTypeIcon type={project.project_type} />
-            <h3 className="font-semibold truncate">{project.name}</h3>
-          </div>
-          <div className="flex items-center gap-1">
+        <div className="relative mb-3">
+          {/* Action buttons absolutely positioned at the card's top-right, outside content padding */}
+          <div
+            className="absolute -top-3 -right-3 flex items-center gap-1 bg-background/80 rounded-lg shadow-sm px-0.5 py-0.5 z-20 border border-border/40 backdrop-blur-sm"
+            style={{ minWidth: 'fit-content', pointerEvents: 'auto' }}
+          >
             <Button
               variant="ghost"
               size="icon"
-              className="opacity-0 group-hover:opacity-100"
+              className="!w-7 !h-7 p-0 opacity-60 hover:opacity-100 focus:opacity-100 transition-opacity rounded-md"
+              style={{ background: 'transparent' }}
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleStar(project, category);
               }}
+              tabIndex={0}
+              aria-label={project.starred ? 'Unstar project' : 'Star project'}
             >
               {project.starred ? (
                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
@@ -78,14 +81,21 @@ export function ProjectCard({
             <Button
               variant="ghost"
               size="icon"
-              className="opacity-0 group-hover:opacity-100"
+              className="!w-7 !h-7 p-0 opacity-60 hover:opacity-100 focus:opacity-100 transition-opacity rounded-md"
+              style={{ background: 'transparent' }}
               onClick={(e) => {
                 e.stopPropagation();
                 onContextMenu(e, project, category);
               }}
+              tabIndex={0}
+              aria-label="Project options"
             >
               <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
             </Button>
+          </div>
+          <div className="flex items-center gap-2 min-w-0">
+            <ProjectTypeIcon type={project.project_type} />
+            <h3 className="font-semibold truncate">{project.name}</h3>
           </div>
         </div>
         <div className="flex items-center justify-between text-sm">

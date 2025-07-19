@@ -40,7 +40,8 @@ fn main() {
             toggle_project_star,
             get_project_structure,
             read_workspace_file,
-            write_workspace_file
+            write_workspace_file,
+            create_category,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
