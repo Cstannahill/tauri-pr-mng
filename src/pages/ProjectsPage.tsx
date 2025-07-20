@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Folder,
   FolderOpen,
@@ -18,8 +19,6 @@ import {
 import { NotificationAlert } from '@/components/notification-alert/notification-alert';
 import { CreateProjectDialog } from '@/components/projects/create-project-dialog';
 import { ProjectCard } from '@/components/projects/project-card';
-import { ProjectDetailsSidebar } from '@/components/projects/project-details-sidebar';
-import { ProjectStructureView } from '@/components/projects/project-structure-view';
 import { ProjectContextMenu } from '@/components/projects/project-context-menu';
 import { CategorySidebar } from '@/components/projects/category-sidebar';
 import { SearchFilterBar } from '@/components/search-filter/search-filter-bar';
@@ -179,10 +178,9 @@ const formatDate = (dateString) => {
 };
 
 const ProjectsPage = () => {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Record<string, any[]>>({});
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [projectStructure, setProjectStructure] = useState({});
   const [contextMenu, setContextMenu] = useState({ isOpen: false, position: { x: 0, y: 0 }, project: null, category: null });
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -232,18 +230,9 @@ const ProjectsPage = () => {
   };
 
 
-  const handleProjectSelect = async (project, category) => {
-    setSelectedProject({ ...project, category });
-    setSelectedCategory(category);
-
-    try {
-      const projectPath = project.path;
-      const structure = await invoke('get_project_structure', { projectPath });
-      setProjectStructure(structure);
-    } catch (error) {
-      console.error('Failed to get project structure:', error);
-      showNotification('Failed to load project structure', 'error');
-    }
+  const handleProjectSelect = (project, category) => {
+    // Navigate to project details page
+    navigate(`/projects/${category}/${encodeURIComponent(project.name)}`);
   };
 
   const handleContextMenu = (e, project, category) => {
@@ -396,7 +385,6 @@ const ProjectsPage = () => {
                       onSelect={handleProjectSelect}
                       onContextMenu={handleContextMenu}
                       onToggleStar={handleToggleStar}
-                      isSelected={selectedProject?.path === project.path}
                       GitStatusIndicator={GitStatusIndicator}
                       ProjectTypeIcon={ProjectTypeIcon}
                       formatFileSize={formatFileSize}
@@ -426,23 +414,6 @@ const ProjectsPage = () => {
             />
           )}
         </div>
-
-        {/* Project Details Sidebar */}
-            {selectedProject && (
-              <div className="fixed inset-0 z-50 md:static md:z-auto md:w-80">
-                <ProjectDetailsSidebar
-                  project={selectedProject}
-                  structure={projectStructure}
-                  onClose={() => setSelectedProject(null)}
-                  invoke={invoke}
-                  ProjectTypeIcon={ProjectTypeIcon}
-                  GitStatusIndicator={GitStatusIndicator}
-                  formatFileSize={formatFileSize}
-                  formatDate={formatDate}
-                  ProjectStructureView={ProjectStructureView}
-                />
-              </div>
-            )}
       </div>
 
       {/* Context Menu */}

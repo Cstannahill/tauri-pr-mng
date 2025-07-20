@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import React from "react";
 import { getProjectTypeLabel } from "@/lib/projectTypes";
+import { badgeGradients } from "@/lib/badgeGradients";
 
 export interface ProjectCardProps {
   project: {
@@ -17,7 +18,6 @@ export interface ProjectCardProps {
     starred?: boolean;
   };
   category: string;
-  isSelected?: boolean;
   onSelect: (project: ProjectCardProps["project"], category: string) => void;
   onContextMenu: (
     e: React.MouseEvent,
@@ -34,7 +34,6 @@ export interface ProjectCardProps {
 export function ProjectCard({
   project,
   category,
-  isSelected,
   onSelect,
   onContextMenu,
   onToggleStar,
@@ -45,11 +44,7 @@ export function ProjectCard({
 }: ProjectCardProps) {
   return (
     <Card
-      className={`group cursor-pointer border-2 transition-all duration-200 hover:shadow-lg ${
-        isSelected
-          ? "border-primary shadow-md"
-          : "border-border hover:border-muted"
-      }`}
+      className="group cursor-pointer border-2 transition-all duration-200 hover:shadow-lg border-border hover:border-muted hover:shadow-lg"
       onClick={() => onSelect(project, category)}
       onContextMenu={(e) => onContextMenu(e, project, category)}
     >
@@ -99,7 +94,10 @@ export function ProjectCard({
           </div>
         </div>
         <div className="flex items-center justify-between text-sm">
-          <Badge variant="outline" className="capitalize">
+          <Badge
+            className="capitalize"
+            gradient={badgeGradients[project.project_type] || badgeGradients.unknown}
+          >
             {getProjectTypeLabel(project.project_type)}
           </Badge>
           <GitStatusIndicator status={project.git_status} />

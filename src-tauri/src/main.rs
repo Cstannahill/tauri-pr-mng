@@ -11,21 +11,26 @@ use app_state::AppState;
 use backend::*;
 
 fn main() {
+    use backend::timeline_service::TimelineService;
+    use std::path::PathBuf;
     tauri::Builder::default()
         .manage(Mutex::new(AppState::default()))
+        .manage({
+            // Place the SQLite DB in the workspace data dir
+            let db_path = dirs::data_dir()
+                .unwrap_or_else(|| PathBuf::from("./"))
+                .join("project-manager/timeline.sqlite");
+            TimelineService::new(db_path.to_str().unwrap())
+        })
         .setup(|app| {
             let handle = app.handle();
             let base = workspace::ensure_workspace(&handle)?;
-            let base_str = base.to_string_lossy().into_owned();   // avoid holding a PathBuf borrow
-
-            // 1️⃣ keep the State<'_, Mutex<AppState>> alive
-            let app_state = app.state::<Mutex<AppState>>();       
-            
-            // 2️⃣ lock and mutate safely
+            let base_str = base.to_string_lossy().into_owned();
+            let app_state = app.state::<Mutex<AppState>>();
             {
                 let mut state = app_state.lock().unwrap();
                 state.base_dir = base_str;
-            } // 3️⃣ guard drops here, mutex is unlocked
+            }
             Ok(())
         })
         .plugin(tauri_plugin_fs::init())
@@ -42,6 +47,10 @@ fn main() {
             read_workspace_file,
             write_workspace_file,
             create_category,
+            add_timeline_event,
+            get_project_timeline,
+            get_or_create_project_uuid,
+            trigger_git_commit_timeline,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

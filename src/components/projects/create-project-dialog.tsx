@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Zap, Monitor, Globe, Terminal, Database } from "lucide-react";
+import { Zap, Monitor, Globe, Terminal, Database, Code } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { badgeGradients } from "@/lib/badgeGradients";
 import {
   Select,
   SelectTrigger,
@@ -29,7 +33,7 @@ export function CreateProjectDialog({ open, onOpenChange, onCreateProject }: Cre
   const [projectName, setProjectName] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("desktop-apps");
   const [selectedType, setSelectedType] = useState("rust");
-  const [step, setStep] = useState(0); // for multi-step
+  const [step, setStep] = useState(0); // 0: basic form, 1: tauri advanced, 2: other sub-options
 
 
   // Suboptions for each project type
@@ -87,12 +91,25 @@ export function CreateProjectDialog({ open, onOpenChange, onCreateProject }: Cre
     { value: "lib", label: "Library" },
     { value: "wasm", label: "WebAssembly" },
   ];
+  // .NET suboptions
+  const dotnetKinds = [
+    { value: "webapi", label: "Web API" },
+    { value: "console", label: "Console App" },
+    { value: "blazor", label: "Blazor" },
+    { value: "mvc", label: "MVC" },
+    { value: "classlib", label: "Class Library" },
+  ];
+
+  // Types that have sub-options (excluding Tauri which has its own advanced flow)
+  const hasSubOptions = (type: string) => 
+    reactLikeTypes.includes(type) || ["node", "python", "rust", "dotnet"].includes(type);
 
   // State for suboptions
   const [reactFlavor, setReactFlavor] = useState("ts");
   const [nodeKind, setNodeKind] = useState("api");
   const [pythonKind, setPythonKind] = useState("script");
   const [rustKind, setRustKind] = useState("cli");
+  const [dotnetKind, setDotnetKind] = useState("webapi");
 
   // For badge display
   const [tauriLang, setTauriLang] = useState("js-ts");
@@ -108,6 +125,7 @@ export function CreateProjectDialog({ open, onOpenChange, onCreateProject }: Cre
     { value: "next", label: "Next.js App", icon: <Globe className="w-4 h-4" /> },
     { value: "node", label: "Node.js App", icon: <Terminal className="w-4 h-4" /> },
     { value: "python", label: "Python App", icon: <Database className="w-4 h-4" /> },
+    { value: "dotnet", label: ".NET App", icon: <Code className="w-4 h-4" /> },
   ];
 
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
@@ -131,14 +149,16 @@ export function CreateProjectDialog({ open, onOpenChange, onCreateProject }: Cre
   }, []);
 
 
-  // Compose type string for Tauri
+  // Compose type string for Tauri and return badge info
   const getTauriTypeString = () => {
-    let badges = ["Tauri"];
-    if (tauriLang === "rust") badges.push("Rust");
-    if (tauriLang === "js-ts") badges.push(tauriTemplate.charAt(0).toUpperCase() + tauriTemplate.slice(1));
-    if (tauriLang === "js-ts") badges.push(tauriFlavor === "ts" ? "TypeScript" : "JavaScript");
-    if (tauriLang === "js-ts" || tauriLang === "rust") badges.push("Rust");
-    if (tauriLang === ".net") badges.push("Blazor", ".NET");
+    let badges: { label: string; key: string }[] = [
+      { label: "Tauri", key: "tauri" },
+    ];
+    if (tauriLang === "rust") badges.push({ label: "Rust", key: "rust" });
+    if (tauriLang === "js-ts") badges.push({ label: tauriTemplate.charAt(0).toUpperCase() + tauriTemplate.slice(1), key: tauriTemplate });
+    if (tauriLang === "js-ts") badges.push({ label: tauriFlavor === "ts" ? "TypeScript" : "JavaScript", key: tauriFlavor === "ts" ? "typescript" : "javascript" });
+    if (tauriLang === "js-ts" || tauriLang === "rust") badges.push({ label: "Rust", key: "rust" });
+    if (tauriLang === ".net") { badges.push({ label: "Blazor", key: "blazor" }); badges.push({ label: ".NET", key: "dotnet" }); }
     return badges;
   };
 
@@ -157,285 +177,344 @@ export function CreateProjectDialog({ open, onOpenChange, onCreateProject }: Cre
         typeString = `python:${pythonKind}`;
       } else if (selectedType === "rust") {
         typeString = `rust:${rustKind}`;
+      } else if (selectedType === "dotnet") {
+        typeString = `dotnet:${dotnetKind}`;
       }
       onCreateProject(selectedCategory, projectName.trim(), typeString);
       setProjectName("");
       setStep(0);
+      // Reset sub-option states
+      setReactFlavor("ts");
+      setNodeKind("api");
+      setPythonKind("script");
+      setRustKind("cli");
+      setDotnetKind("webapi");
       onOpenChange(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create New Project</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-2">
-            <Label htmlFor="project-name">Project Name</Label>
-            <Input
-              id="project-name"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              placeholder="my-awesome-project"
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="category">Category</Label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger id="category">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-2">
-            <Label>Project Type</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {projectTypes.map((type) => (
-                <Button
-                  key={type.value}
-                  type="button"
-                  variant={selectedType === type.value ? "default" : "outline"}
-                  onClick={() => {
-                    setSelectedType(type.value);
-                    if (type.value === "tauri") setStep(1);
-                    else setStep(0);
-                  }}
-                  className="justify-start"
-                >
-                  {type.icon}
-                  <span className="text-sm font-medium">{type.label}</span>
-                </Button>
-              ))}
-            </div>
-          </div>
+      <DialogContent className="max-w-2xl p-0 bg-background/95 shadow-xl rounded-2xl">
+        <Card className="bg-transparent shadow-none border-none">
+          <CardContent className="p-8">
+            <DialogHeader className="mb-6">
+              <DialogTitle className="text-2xl font-bold tracking-tight">
+                {step === 0 ? "Create New Project" : step === 1 ? "Configure Tauri App" : "Configure Project Options"}
+              </DialogTitle>
+            </DialogHeader>
+            {step === 0 && (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid gap-4">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="project-name">Project Name</Label>
+                    <Input
+                      id="project-name"
+                      value={projectName}
+                      onChange={(e) => setProjectName(e.target.value)}
+                      placeholder="my-awesome-project"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger id="category" className="w-full" size="default">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label>Project Type</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {projectTypes.map((type) => (
+                        <Button
+                          key={type.value}
+                          type="button"
+                          variant={selectedType === type.value ? "default" : "outline"}
+                          onClick={() => setSelectedType(type.value)}
+                          className="justify-start h-12 text-base font-medium rounded-xl border border-border/60 shadow-sm bg-background/80 hover:bg-accent/60"
+                        >
+                          {type.icon}
+                          <span>{type.label}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <Separator className="my-6" />
+                <DialogFooter className="flex flex-row gap-2 justify-between">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setStep(0);
+                      onOpenChange(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  {selectedType === "tauri" ? (
+                    <Button type="button" onClick={() => setStep(1)}>
+                      Configure Tauri
+                    </Button>
+                  ) : hasSubOptions(selectedType) ? (
+                    <Button type="button" onClick={() => setStep(2)}>
+                      Configure Options
+                    </Button>
+                  ) : (
+                    <Button type="submit">Create Project</Button>
+                  )}
+                </DialogFooter>
+              </form>
+            )}
 
-          {/* Multi-step suboptions for all project types */}
-          {selectedType === "tauri" && (
-            <div className="border rounded-lg p-4 bg-muted/50">
-              <div className="flex items-center gap-2 mb-2">
-                {getTauriTypeString().map((badge) => (
-                  <span key={badge} className="px-2 py-1 text-xs rounded bg-primary/10 text-primary font-semibold mr-1">
-                    {badge}
-                  </span>
-                ))}
-              </div>
-              {/* ...existing Tauri stepper code... */}
-              {step === 1 && (
-                <div className="space-y-2">
+             {step === 1 && selectedType === "tauri" && (
+               <div className="space-y-6">
+                 <div className="flex flex-wrap gap-2 mb-4">
+                   {getTauriTypeString().map((badge) => (
+                     <Badge key={badge.key} gradient={badgeGradients[badge.key] || undefined} className="font-semibold px-3 py-1 rounded-lg">
+                       {badge.label}
+                     </Badge>
+                   ))}
+                 </div>
+            <Card className="bg-muted/60 border-none shadow-none">
+              <CardContent className="p-6 flex flex-col gap-6">
+                <div className="flex flex-col gap-2">
                   <Label>Frontend Language</Label>
                   <div className="flex gap-2 flex-wrap">
                     {frontendLanguages.map((lang) => (
-                      <Button
+                      <Badge
                         key={lang.value}
-                        type="button"
-                        variant={tauriLang === lang.value ? "default" : "outline"}
-                        onClick={() => {
-                          setTauriLang(lang.value);
-                          setStep(2);
-                        }}
-                        className="text-xs"
+                        onClick={() => setTauriLang(lang.value)}
+                        gradient={tauriLang === lang.value ? (badgeGradients[lang.value.replace('.', '')] || badgeGradients.unknown) : undefined}
+                        className={`cursor-pointer px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                          tauriLang === lang.value ? 'ring-2 ring-primary/20' : 'bg-muted hover:bg-muted/80 text-foreground'
+                        }`}
                       >
                         {lang.label}
-                      </Button>
+                      </Badge>
                     ))}
                   </div>
                 </div>
-              )}
-              {step === 2 && (
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2">
                   <Label>UI Template</Label>
                   <div className="flex gap-2 flex-wrap">
                     {tauriTemplates[tauriLang].map((tpl) => (
-                      <Button
+                      <Badge
                         key={tpl.value}
-                        type="button"
-                        variant={tauriTemplate === tpl.value ? "default" : "outline"}
-                        onClick={() => {
-                          setTauriTemplate(tpl.value);
-                          if (tauriLang === "js-ts") setStep(3);
-                          else setStep(4);
-                        }}
-                        className="text-xs"
+                        onClick={() => setTauriTemplate(tpl.value)}
+                        gradient={tauriTemplate === tpl.value ? (badgeGradients[tpl.value] || badgeGradients.unknown) : undefined}
+                        className={`cursor-pointer px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                          tauriTemplate === tpl.value ? 'ring-2 ring-primary/20' : 'bg-muted hover:bg-muted/80 text-foreground'
+                        }`}
                       >
                         {tpl.label}
-                      </Button>
+                      </Badge>
                     ))}
                   </div>
                 </div>
-              )}
-              {step === 3 && tauriLang === "js-ts" && (
-                <div className="space-y-2">
-                  <Label>UI Flavor</Label>
-                  <div className="flex gap-2 flex-wrap">
-                    {jsTsFlavors.map((flavor) => (
-                      <Button
-                        key={flavor.value}
-                        type="button"
-                        variant={tauriFlavor === flavor.value ? "default" : "outline"}
-                        onClick={() => {
-                          setTauriFlavor(flavor.value);
-                          setStep(4);
-                        }}
-                        className="text-xs"
-                      >
-                        {flavor.label}
-                      </Button>
-                    ))}
+                {tauriLang === "js-ts" && (
+                  <div className="flex flex-col gap-2">
+                    <Label>UI Flavor</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      {jsTsFlavors.map((flavor) => (
+                        <Badge
+                          key={flavor.value}
+                          onClick={() => setTauriFlavor(flavor.value)}
+                          gradient={tauriFlavor === flavor.value ? (badgeGradients[flavor.value] || badgeGradients.unknown) : undefined}
+                          className={`cursor-pointer px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                            tauriFlavor === flavor.value ? 'ring-2 ring-primary/20' : 'bg-muted hover:bg-muted/80 text-foreground'
+                          }`}
+                        >
+                          {flavor.label}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-              {step === 4 && tauriLang === "js-ts" && (
-                <div className="space-y-2">
-                  <Label>Package Manager</Label>
-                  <div className="flex gap-2 flex-wrap">
-                    {jsTsPackageManagers.map((pm) => (
-                      <Button
-                        key={pm.value}
-                        type="button"
-                        variant={tauriPkg === pm.value ? "default" : "outline"}
-                        onClick={() => setTauriPkg(pm.value)}
-                        className="text-xs"
-                      >
-                        {pm.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="flex gap-2 mt-4">
-                {step > 1 && (
-                  <Button type="button" variant="outline" size="sm" onClick={() => setStep(step - 1)}>
-                    Back
-                  </Button>
                 )}
-                {step < (tauriLang === "js-ts" ? 4 : 2) && (
-                  <Button type="button" size="sm" onClick={() => setStep(step + 1)}>
-                    Next
-                  </Button>
+                {tauriLang === "js-ts" && (
+                  <div className="flex flex-col gap-2">
+                    <Label>Package Manager</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      {jsTsPackageManagers.map((pm) => (
+                        <Button
+                          key={pm.value}
+                          type="button"
+                          variant={tauriPkg === pm.value ? "default" : "outline"}
+                          onClick={() => setTauriPkg(pm.value)}
+                          className="text-base rounded-lg"
+                        >
+                          {pm.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              </div>
-            </div>
-          )}
+              </CardContent>
+            </Card>
+            <DialogFooter className="flex flex-row gap-2 justify-between pt-4">
+              <Button type="button" variant="outline" onClick={() => setStep(0)}>
+                Back
+              </Button>
+              <Button type="button" onClick={handleSubmit}>
+                Create Project
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
 
-          {/* React/Next.js multi-step */}
-          {reactLikeTypes.includes(selectedType) && (
-            <div className="border rounded-lg p-4 bg-muted/50 flex items-center gap-2 mb-2">
-              <span className="px-2 py-1 text-xs rounded bg-primary/10 text-primary font-semibold mr-1">
-                {selectedType.charAt(0).toUpperCase() + selectedType.slice(1)}
-              </span>
-              <span className="px-2 py-1 text-xs rounded bg-primary/10 text-primary font-semibold mr-1">
-                {reactFlavor === "ts" ? "TypeScript" : "JavaScript"}
-              </span>
-              <div className="flex gap-2 ml-4">
-                {jsTsFlavors.map((flavor) => (
-                  <Button
-                    key={flavor.value}
-                    type="button"
-                    variant={reactFlavor === flavor.value ? "default" : "outline"}
-                    onClick={() => setReactFlavor(flavor.value)}
-                    className="text-xs"
-                  >
-                    {flavor.label}
-                  </Button>
-                ))}
-              </div>
+        {step === 2 && hasSubOptions(selectedType) && (
+          <div className="space-y-6">
+            <div className="flex flex-wrap gap-2 mb-4">
+              <Badge gradient={badgeGradients[selectedType] || badgeGradients.unknown} className="font-semibold px-3 py-1 rounded-lg">
+                {projectTypes.find(t => t.value === selectedType)?.label}
+              </Badge>
+              {reactLikeTypes.includes(selectedType) && (
+                <Badge gradient={badgeGradients[reactFlavor === "ts" ? "typescript" : "javascript"] || badgeGradients.unknown} className="font-semibold px-3 py-1 rounded-lg">
+                  {reactFlavor === "ts" ? "TypeScript" : "JavaScript"}
+                </Badge>
+              )}
+              {selectedType === "node" && (
+                <Badge gradient={badgeGradients[nodeKind] || badgeGradients.unknown} className="font-semibold px-3 py-1 rounded-lg">
+                  {nodeKinds.find(k => k.value === nodeKind)?.label}
+                </Badge>
+              )}
+              {selectedType === "python" && (
+                <Badge gradient={badgeGradients[pythonKind] || badgeGradients.unknown} className="font-semibold px-3 py-1 rounded-lg">
+                  {pythonKinds.find(k => k.value === pythonKind)?.label}
+                </Badge>
+              )}
+              {selectedType === "rust" && (
+                <Badge gradient={badgeGradients[rustKind] || badgeGradients.unknown} className="font-semibold px-3 py-1 rounded-lg">
+                  {rustKinds.find(k => k.value === rustKind)?.label}
+                </Badge>
+              )}
+              {selectedType === "dotnet" && (
+                <Badge gradient={badgeGradients[dotnetKind] || badgeGradients.unknown} className="font-semibold px-3 py-1 rounded-lg">
+                  {dotnetKinds.find(k => k.value === dotnetKind)?.label}
+                </Badge>
+              )}
             </div>
-          )}
-
-          {/* Node.js multi-step */}
-          {selectedType === "node" && (
-            <div className="border rounded-lg p-4 bg-muted/50 flex items-center gap-2 mb-2">
-              <span className="px-2 py-1 text-xs rounded bg-primary/10 text-primary font-semibold mr-1">Node.js</span>
-              <span className="px-2 py-1 text-xs rounded bg-primary/10 text-primary font-semibold mr-1">
-                {nodeKinds.find(k => k.value === nodeKind)?.label}
-              </span>
-              <div className="flex gap-2 ml-4">
-                {nodeKinds.map((kind) => (
-                  <Button
-                    key={kind.value}
-                    type="button"
-                    variant={nodeKind === kind.value ? "default" : "outline"}
-                    onClick={() => setNodeKind(kind.value)}
-                    className="text-xs"
-                  >
-                    {kind.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Python multi-step */}
-          {selectedType === "python" && (
-            <div className="border rounded-lg p-4 bg-muted/50 flex items-center gap-2 mb-2">
-              <span className="px-2 py-1 text-xs rounded bg-primary/10 text-primary font-semibold mr-1">Python</span>
-              <span className="px-2 py-1 text-xs rounded bg-primary/10 text-primary font-semibold mr-1">
-                {pythonKinds.find(k => k.value === pythonKind)?.label}
-              </span>
-              <div className="flex gap-2 ml-4">
-                {pythonKinds.map((kind) => (
-                  <Button
-                    key={kind.value}
-                    type="button"
-                    variant={pythonKind === kind.value ? "default" : "outline"}
-                    onClick={() => setPythonKind(kind.value)}
-                    className="text-xs"
-                  >
-                    {kind.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Rust multi-step */}
-          {selectedType === "rust" && (
-            <div className="border rounded-lg p-4 bg-muted/50 flex items-center gap-2 mb-2">
-              <span className="px-2 py-1 text-xs rounded bg-primary/10 text-primary font-semibold mr-1">Rust</span>
-              <span className="px-2 py-1 text-xs rounded bg-primary/10 text-primary font-semibold mr-1">
-                {rustKinds.find(k => k.value === rustKind)?.label}
-              </span>
-              <div className="flex gap-2 ml-4">
-                {rustKinds.map((kind) => (
-                  <Button
-                    key={kind.value}
-                    type="button"
-                    variant={rustKind === kind.value ? "default" : "outline"}
-                    onClick={() => setRustKind(kind.value)}
-                    className="text-xs"
-                  >
-                    {kind.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <DialogFooter className="pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setStep(0);
-                onOpenChange(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit">Create Project</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <Card className="bg-muted/60 border-none shadow-none">
+              <CardContent className="p-6 flex flex-col gap-6">
+                {reactLikeTypes.includes(selectedType) && (
+                  <div className="flex flex-col gap-2">
+                    <Label>Language</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      {jsTsFlavors.map((flavor) => (
+                        <Badge
+                          key={flavor.value}
+                          onClick={() => setReactFlavor(flavor.value)}
+                          gradient={reactFlavor === flavor.value ? (badgeGradients[flavor.value] || badgeGradients.unknown) : undefined}
+                          className={`cursor-pointer px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                            reactFlavor === flavor.value ? 'ring-2 ring-primary/20' : 'bg-muted hover:bg-muted/80 text-foreground'
+                          }`}
+                        >
+                          {flavor.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selectedType === "node" && (
+                  <div className="flex flex-col gap-2">
+                    <Label>Project Type</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      {nodeKinds.map((kind) => (
+                        <Badge
+                          key={kind.value}
+                          onClick={() => setNodeKind(kind.value)}
+                          gradient={nodeKind === kind.value ? (badgeGradients[kind.value] || badgeGradients.unknown) : undefined}
+                          className={`cursor-pointer px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                            nodeKind === kind.value ? 'ring-2 ring-primary/20' : 'bg-muted hover:bg-muted/80 text-foreground'
+                          }`}
+                        >
+                          {kind.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selectedType === "python" && (
+                  <div className="flex flex-col gap-2">
+                    <Label>Project Type</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      {pythonKinds.map((kind) => (
+                        <Badge
+                          key={kind.value}
+                          onClick={() => setPythonKind(kind.value)}
+                          gradient={pythonKind === kind.value ? (badgeGradients[kind.value] || badgeGradients.unknown) : undefined}
+                          className={`cursor-pointer px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                            pythonKind === kind.value ? 'ring-2 ring-primary/20' : 'bg-muted hover:bg-muted/80 text-foreground'
+                          }`}
+                        >
+                          {kind.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selectedType === "rust" && (
+                  <div className="flex flex-col gap-2">
+                    <Label>Project Type</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      {rustKinds.map((kind) => (
+                        <Badge
+                          key={kind.value}
+                          onClick={() => setRustKind(kind.value)}
+                          gradient={rustKind === kind.value ? (badgeGradients[kind.value] || badgeGradients.unknown) : undefined}
+                          className={`cursor-pointer px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                            rustKind === kind.value ? 'ring-2 ring-primary/20' : 'bg-muted hover:bg-muted/80 text-foreground'
+                          }`}
+                        >
+                          {kind.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selectedType === "dotnet" && (
+                  <div className="flex flex-col gap-2">
+                    <Label>Project Type</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {dotnetKinds.map((kind) => (
+                        <Badge
+                          key={kind.value}
+                          onClick={() => setDotnetKind(kind.value)}
+                          gradient={dotnetKind === kind.value ? (badgeGradients[kind.value] || badgeGradients.unknown) : undefined}
+                          className={`cursor-pointer px-3 py-2 text-sm font-medium rounded-lg transition-all justify-start ${
+                            dotnetKind === kind.value ? 'ring-2 ring-primary/20' : 'bg-muted hover:bg-muted/80 text-foreground'
+                          }`}
+                        >
+                          {kind.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            <DialogFooter className="flex flex-row gap-2 justify-between pt-4">
+              <Button type="button" variant="outline" onClick={() => setStep(0)}>
+                Back
+              </Button>
+              <Button type="button" onClick={handleSubmit}>
+                Create Project
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+        </CardContent>
+      </Card>
+    </DialogContent>
+  </Dialog>
   );
 }

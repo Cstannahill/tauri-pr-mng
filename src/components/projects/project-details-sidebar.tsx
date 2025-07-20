@@ -3,6 +3,8 @@ import { Code, Terminal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getProjectTypeLabel } from "@/lib/projectTypes";
+import { Badge } from "@/components/ui/badge";
+import { badgeGradients } from "@/lib/badgeGradients";
 
 export interface ProjectDetailsSidebarProps {
   project: {
@@ -58,7 +60,12 @@ export function ProjectDetailsSidebar({
                 <p className="text-xs text-muted-foreground">Type</p>
                 <div className="flex items-center gap-2">
                   <ProjectTypeIcon type={project.project_type} />
-                  <span className="text-sm font-medium">{getProjectTypeLabel(project.project_type)}</span>
+                  <Badge
+                    className="capitalize"
+                    gradient={badgeGradients[project.project_type] || badgeGradients.unknown}
+                  >
+                    {getProjectTypeLabel(project.project_type)}
+                  </Badge>
                 </div>
               </div>
               <div>

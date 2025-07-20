@@ -4,8 +4,8 @@ import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuL
 import ThemeToggle from '@/components/theme/theme-toggle';
 
 const MainLayout = () => (
-  <div className="min-h-screen flex flex-col">
-    <header className="border-b border-border bg-sidebar text-sidebar-foreground px-4 py-2 flex items-center justify-between">
+  <div className="min-h-screen flex flex-col bg-background">
+    <header className="border-b border-border bg-sidebar text-sidebar-foreground px-4 py-2 flex items-center justify-between flex-shrink-0">
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem>
@@ -18,21 +18,21 @@ const MainLayout = () => (
           <NavigationMenuItem>
             <NavigationMenuLink asChild>
               <NavLink to="/analytics" className="px-3 py-2">
-                Analytics
+                Global Analytics
               </NavLink>
             </NavigationMenuLink>
           </NavigationMenuItem>
           <NavigationMenuItem>
             <NavigationMenuLink asChild>
               <NavLink to="/timeline" className="px-3 py-2">
-                Timeline
+                Global Timeline
               </NavLink>
             </NavigationMenuLink>
           </NavigationMenuItem>
           <NavigationMenuItem>
             <NavigationMenuLink asChild>
               <NavLink to="/kanban" className="px-3 py-2">
-                Kanban
+                Global Kanban
               </NavLink>
             </NavigationMenuLink>
           </NavigationMenuItem>

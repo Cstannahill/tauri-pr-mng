@@ -38,9 +38,9 @@ function TreeNode({
   icon,
 }: TreeNodeProps) {
   return (
-    <div>
+    <div className="bg-sidebar">
       <div
-        className={`flex items-center gap-2 p-2 hover:bg-muted cursor-pointer rounded-md transition-colors ${level > 0 ? "ml-4" : ""}`}
+        className={`flex items-center gap-2 py-1.5 px-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer rounded-md transition-colors bg-sidebar ${level > 0 ? `ml-${Math.min(level * 4, 16)}` : ""}`}
         onClick={onToggle}
       >
         {isFolder && (
@@ -54,9 +54,9 @@ function TreeNode({
           ) : (
             <File className="w-4 h-4 text-muted-foreground" />
           ))}
-        <span className="text-sm font-medium">{name}</span>
+        <span className="text-sm font-medium text-sidebar-foreground">{name}</span>
       </div>
-      {isExpanded && children && <div className="ml-2">{children}</div>}
+      {isExpanded && children && <div className="ml-2 bg-sidebar">{children}</div>}
     </div>
   )
 }
@@ -105,26 +105,28 @@ export function ProjectStructureView({ project, structure }: ProjectStructureVie
   }
 
   return (
-    <Card className="p-4">
-      <CardHeader className="p-0 mb-4 flex items-center justify-between">
+    <Card className="bg-sidebar border-sidebar-border flex-1 min-h-fit">
+      <CardHeader className="p-3 mb-2 flex items-center justify-between bg-sidebar">
         <div className="flex items-center gap-2">
-          <Layers className="w-5 h-5 text-muted-foreground" />
-          <CardTitle className="text-base">Project Structure</CardTitle>
+          <Layers className="w-5 h-5 text-sidebar-foreground" />
+          <CardTitle className="text-base text-sidebar-foreground">Project Structure</CardTitle>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setShowHidden(!showHidden)}
-          className="gap-1 text-xs text-muted-foreground hover:text-foreground"
+          className="gap-1 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
         >
           {showHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
           {showHidden ? "Hide" : "Show"} hidden
         </Button>
       </CardHeader>
-      <CardContent className="p-0">
-        <ScrollArea className="max-h-96">
+      <CardContent className="p-0 px-3 pb-3 bg-sidebar flex-1">
+        <div className="space-y-0.5 pb-2 bg-sidebar">
           {renderStructure(structure)}
-        </ScrollArea>
+          {/* Add some padding at the bottom to ensure background extends */}
+          <div className="h-4 bg-sidebar"></div>
+        </div>
       </CardContent>
     </Card>
   )

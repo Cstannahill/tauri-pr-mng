@@ -1,12 +1,148 @@
-use crate::app_state::AppState;
-use tauri::{State};
-use std::sync::Mutex;
+/// Tauri command to get the latest commit hash for a project directory
 #[tauri::command]
-pub fn create_category(app_handle: tauri::AppHandle, name: String, state: State<'_, Mutex<AppState>>) -> Result<(), String> {
+pub fn get_latest_commit_hash(project_path: String) -> Result<String, String> {
+    use std::process::Command;
+    let output = Command::new("git")
+        .args(["rev-parse", "HEAD"])
+        .current_dir(&project_path)
+        .output()
+        .map_err(|e| format!("Failed to run git rev-parse: {}", e))?;
+    if !output.status.success() {
+        return Err(format!("git rev-parse failed: {}", String::from_utf8_lossy(&output.stderr)));
+    }
+    let hash = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    Ok(hash)
+}
+use std::fs;
+use std::fs::File;
+use std::io::{Read, Write};
+use tauri::Manager;
+use tauri::Emitter;
+/// Get or create a persistent UUID for a project directory
+#[tauri::command]
+pub fn get_or_create_project_uuid(project_path: String) -> Result<String, String> {
+    let id_path = std::path::Path::new(&project_path).join(".project_id");
+    if id_path.exists() {
+        let mut s = String::new();
+        File::open(&id_path)
+            .map_err(|e| format!("Failed to open .project_id: {}", e))?
+            .read_to_string(&mut s)
+            .map_err(|e| format!("Failed to read .project_id: {}", e))?;
+        let s = s.trim();
+        if Uuid::parse_str(s).is_ok() {
+            return Ok(s.to_string());
+        }
+    }
+    let new_id = Uuid::new_v4().to_string();
+    File::create(&id_path)
+        .and_then(|mut f| f.write_all(new_id.as_bytes()))
+        .map_err(|e| format!("Failed to write .project_id: {}", e))?;
+    Ok(new_id)
+}
+/// Tauri command to trigger handle_git_commit_timeline from CLI/HTTP
+#[tauri::command]
+pub async fn trigger_git_commit_timeline(
+    app_handle: tauri::AppHandle,
+    project_id: String,
+    project_path: String,
+    commit_hash: String,
+    openai_key: String,
+    state: tauri::State<'_, TimelineService>,
+) -> Result<(), String> {
+    let uuid = Uuid::parse_str(&project_id).map_err(|e| e.to_string())?;
+    handle_git_commit_timeline(
+        app_handle,
+        uuid,
+        &project_path,
+        &commit_hash,
+        &openai_key,
+        &state,
+    ).await
+}
+use crate::backend::timeline_ai::generate_commit_summary;
+use std::process::Command;
+/// Call this after a git commit to generate and emit a timeline event using AI
+pub async fn handle_git_commit_timeline(
+    app_handle: tauri::AppHandle,
+    project_id: uuid::Uuid,
+    project_path: &str,
+    commit_hash: &str,
+    openai_key: &str,
+    timeline_service: &crate::backend::timeline_service::TimelineService,
+) -> Result<(), String> {
+    // 1. Read project summary (e.g., SUMMARY.md)
+    let summary_path = std::path::Path::new(project_path).join("SUMMARY.md");
+    let project_summary = std::fs::read_to_string(&summary_path).unwrap_or_default();
+
+    // 2. Get commit diff
+    let diff_output = Command::new("git")
+        .args(["diff-tree", "-p", commit_hash])
+        .current_dir(project_path)
+        .output()
+        .map_err(|e| format!("Failed to run git diff-tree: {}", e))?;
+    let commit_diff = String::from_utf8_lossy(&diff_output.stdout).to_string();
+
+    // 3. Call AI to generate summary
+    let summary = generate_commit_summary(&project_summary, &commit_diff, openai_key)
+        .await
+        .unwrap_or_else(|_| "Commit summary unavailable".to_string());
+
+    // 4. Create and emit timeline event
+    use crate::backend::timeline::{TimelineEvent, TimelineEventType};
+    use chrono::Utc;
+    let event = TimelineEvent {
+        id: Uuid::new_v4(),
+        project_id,
+        timestamp: Utc::now(),
+        event_type: TimelineEventType::GitCommit {
+            hash: commit_hash.to_string(),
+            message: summary.clone(),
+        },
+        title: format!("Commit {}", &commit_hash[..7]),
+        description: Some(summary),
+        metadata: Default::default(),
+        user_id: None,
+        tags: vec!["commit".to_string()],
+    };
+    app_handle.emit("timeline_event_added", &event).ok();
+    timeline_service.add_event(&event).map_err(|e| e.to_string())?;
+    Ok(())
+}
+use crate::app_state::AppState;
+use tauri::State;
+use std::sync::Mutex;
+mod timeline;
+pub mod timeline_service;
+mod timeline_ai;
+use timeline::*;
+use timeline_service::TimelineService;
+use uuid::Uuid;
+use chrono::{DateTime, Utc};
+use serde_json::Value;
+// Timeline Tauri commands
+#[tauri::command]
+pub fn add_timeline_event(event: TimelineEvent, state: tauri::State<'_, TimelineService>) -> Result<(), String> {
+    state.add_event(&event).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn get_project_timeline(
+    project_id: String,
+    offset: usize,
+    limit: usize,
+    search: Option<String>,
+    event_types: Option<Vec<String>>,
+    state: tauri::State<'_, TimelineService>
+) -> Result<Vec<TimelineEvent>, String> {
+    let uuid = Uuid::parse_str(&project_id).map_err(|e| e.to_string())?;
+    state.get_project_timeline(uuid, offset, limit, search, event_types).map_err(|e| e.to_string())
+}
+#[tauri::command]
+pub fn create_category(_app_handle: tauri::AppHandle, name: String, state: State<'_, Mutex<AppState>>) -> Result<(), String> {
     let mut app_state = state.lock().map_err(|_| "Failed to lock app state".to_string())?;
     let base_dir = &app_state.base_dir;
     let category_path = std::path::Path::new(base_dir).join(&name);
-    std::fs::create_dir_all(&category_path).map_err(|e| format!("Failed to create category directory: {}", e))?;
+    fs::create_dir_all(&category_path).map_err(|e| format!("Failed to create category directory: {}", e))?;
 
     if !app_state.categories.contains(&name) {
         app_state.categories.push(name.clone());
@@ -17,7 +153,6 @@ pub fn create_category(app_handle: tauri::AppHandle, name: String, state: State<
 // backend/mod.rs - shared backend commands for Tauri
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::AppHandle;
 
@@ -301,6 +436,7 @@ pub fn create_project(
     category: String,
     name: String,
     project_type: String,
+    app_handle: tauri::AppHandle,
 ) -> Result<String, String> {
     let base_path = Path::new(&base_dir);
     let category_path = base_path.join(&category);
@@ -342,6 +478,37 @@ pub fn create_project(
             )
             .map_err(|e| format!("Failed to create README.md: {}", e))?;
         }
+    }
+
+    // Emit timeline event for project creation
+    use crate::backend::timeline::{TimelineEvent, TimelineEventType};
+    use uuid::Uuid;
+    use chrono::Utc;
+    use std::collections::HashMap;
+    use serde_json::Value;
+
+    // Get or create project UUID
+    let project_id = match get_or_create_project_uuid(project_path.to_string_lossy().to_string()) {
+        Ok(id) => Uuid::parse_str(&id).unwrap_or_else(|_| Uuid::new_v4()),
+        Err(_) => Uuid::new_v4(),
+    };
+
+    let event = TimelineEvent {
+        id: Uuid::new_v4(),
+        project_id,
+        timestamp: Utc::now(),
+        event_type: TimelineEventType::ProjectCreated,
+        title: format!("Project created: {}", name),
+        description: Some(format!("Project '{}' was created in category '{}' as a {} project.", name, category, project_type)),
+        metadata: HashMap::new(),
+        user_id: None,
+        tags: vec!["created".to_string(), project_type.clone()],
+    };
+
+    // Try to emit and store the event
+    let _ = app_handle.emit("timeline_event_added", &event);
+    if let Some(timeline_service) = app_handle.try_state::<TimelineService>() {
+        let _ = timeline_service.add_event(&event);
     }
 
     Ok(project_path.to_string_lossy().to_string())
