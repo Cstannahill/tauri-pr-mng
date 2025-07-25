@@ -3,7 +3,6 @@ use rusqlite::{params, Connection, Result as SqlResult};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
-use serde_json::json;
 
 pub struct TimelineService {
     db: Arc<Mutex<Connection>>,

@@ -11,7 +11,7 @@ use app_state::AppState;
 use backend::*;
 
 fn main() {
-    use backend::timeline_service::TimelineService;
+    use backend::{timeline_service::TimelineService, kanban_service::KanbanService};
     use std::path::PathBuf;
     tauri::Builder::default()
         .manage(Mutex::new(AppState::default()))
@@ -21,6 +21,13 @@ fn main() {
                 .unwrap_or_else(|| PathBuf::from("./"))
                 .join("project-manager/timeline.sqlite");
             TimelineService::new(db_path.to_str().unwrap())
+        })
+        .manage({
+            // Place the Kanban SQLite DB in the workspace data dir
+            let kanban_db_path = dirs::data_dir()
+                .unwrap_or_else(|| PathBuf::from("./"))
+                .join("project-manager/kanban.sqlite");
+            KanbanService::new(kanban_db_path.to_str().unwrap())
         })
         .setup(|app| {
             let handle = app.handle();
@@ -51,6 +58,11 @@ fn main() {
             get_project_timeline,
             get_or_create_project_uuid,
             trigger_git_commit_timeline,
+            create_kanban_task,
+            update_kanban_task,
+            delete_kanban_task,
+            get_kanban_board,
+            move_kanban_task,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

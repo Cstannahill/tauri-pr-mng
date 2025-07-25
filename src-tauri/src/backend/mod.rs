@@ -114,11 +114,14 @@ use std::sync::Mutex;
 mod timeline;
 pub mod timeline_service;
 mod timeline_ai;
+mod kanban;
+pub mod kanban_service;
 use timeline::*;
 use timeline_service::TimelineService;
+use kanban::*;
+use kanban_service::KanbanService;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
-use serde_json::Value;
 // Timeline Tauri commands
 #[tauri::command]
 pub fn add_timeline_event(event: TimelineEvent, state: tauri::State<'_, TimelineService>) -> Result<(), String> {
@@ -136,6 +139,99 @@ pub fn get_project_timeline(
 ) -> Result<Vec<TimelineEvent>, String> {
     let uuid = Uuid::parse_str(&project_id).map_err(|e| e.to_string())?;
     state.get_project_timeline(uuid, offset, limit, search, event_types).map_err(|e| e.to_string())
+}
+
+// Kanban Tauri commands
+#[tauri::command]
+pub fn create_kanban_task(
+    project_id: String,
+    title: String,
+    description: Option<String>,
+    priority: String,
+    assignee: Option<String>,
+    tags: Vec<String>,
+    due_date: Option<String>,
+    estimated_hours: Option<f32>,
+    state: tauri::State<'_, KanbanService>
+) -> Result<KanbanTask, String> {
+    let project_uuid = Uuid::parse_str(&project_id).map_err(|e| e.to_string())?;
+    let task = KanbanTask {
+        id: Uuid::new_v4(),
+        project_id: project_uuid,
+        title,
+        description,
+        status: TaskStatus::Todo,
+        priority: TaskPriority::from_string(&priority),
+        assignee,
+        tags,
+        created_at: Utc::now(),
+        updated_at: Utc::now(),
+        due_date: due_date.and_then(|d| DateTime::parse_from_rfc3339(&d).ok().map(|dt| dt.with_timezone(&Utc))),
+        estimated_hours,
+        metadata: std::collections::HashMap::new(),
+    };
+    
+    state.create_task(&task).map_err(|e| e.to_string())?;
+    Ok(task)
+}
+
+#[tauri::command]
+pub fn update_kanban_task(
+    task_id: String,
+    project_id: String,
+    title: String,
+    description: Option<String>,
+    status: String,
+    priority: String,
+    assignee: Option<String>,
+    tags: Vec<String>,
+    due_date: Option<String>,
+    estimated_hours: Option<f32>,
+    state: tauri::State<'_, KanbanService>
+) -> Result<(), String> {
+    let task_uuid = Uuid::parse_str(&task_id).map_err(|e| e.to_string())?;
+    let project_uuid = Uuid::parse_str(&project_id).map_err(|e| e.to_string())?;
+    
+    let updated_task = KanbanTask {
+        id: task_uuid,
+        project_id: project_uuid,
+        title,
+        description,
+        status: TaskStatus::from_string(&status),
+        priority: TaskPriority::from_string(&priority),
+        assignee,
+        tags,
+        created_at: Utc::now(), // This should ideally be preserved from existing task
+        updated_at: Utc::now(),
+        due_date: due_date.and_then(|d| DateTime::parse_from_rfc3339(&d).ok().map(|dt| dt.with_timezone(&Utc))),
+        estimated_hours,
+        metadata: std::collections::HashMap::new(),
+    };
+    
+    state.update_task(&updated_task).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn delete_kanban_task(task_id: String, state: tauri::State<'_, KanbanService>) -> Result<(), String> {
+    let task_uuid = Uuid::parse_str(&task_id).map_err(|e| e.to_string())?;
+    state.delete_task(task_uuid).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn get_kanban_board(project_id: String, state: tauri::State<'_, KanbanService>) -> Result<KanbanBoard, String> {
+    let project_uuid = Uuid::parse_str(&project_id).map_err(|e| e.to_string())?;
+    state.get_kanban_board(project_uuid).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn move_kanban_task(
+    task_id: String,
+    new_status: String,
+    state: tauri::State<'_, KanbanService>
+) -> Result<(), String> {
+    let task_uuid = Uuid::parse_str(&task_id).map_err(|e| e.to_string())?;
+    let status = TaskStatus::from_string(&new_status);
+    state.move_task(task_uuid, status).map_err(|e| e.to_string())
 }
 #[tauri::command]
 pub fn create_category(_app_handle: tauri::AppHandle, name: String, state: State<'_, Mutex<AppState>>) -> Result<(), String> {
@@ -485,7 +581,6 @@ pub fn create_project(
     use uuid::Uuid;
     use chrono::Utc;
     use std::collections::HashMap;
-    use serde_json::Value;
 
     // Get or create project UUID
     let project_id = match get_or_create_project_uuid(project_path.to_string_lossy().to_string()) {

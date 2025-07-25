@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import TimelinePage from './TimelinePage';
+import KanbanPage from './KanbanPage';
 
 // Helper component to fetch project UUID and render TimelinePage
 function TimelineTabWithUuid({ projectPath }: { projectPath: string }) {
@@ -11,6 +12,18 @@ function TimelineTabWithUuid({ projectPath }: { projectPath: string }) {
   }, [projectPath]);
   if (!projectId) return <div>Loading timeline...</div>;
   return <TimelinePage projectId={projectId} />;
+}
+
+// Helper component to fetch project UUID and render KanbanPage
+function KanbanTabWithUuid({ projectPath }: { projectPath: string }) {
+  const [projectId, setProjectId] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    invoke<string>('get_or_create_project_uuid', { project_path: projectPath })
+      .then(setProjectId)
+      .catch(() => setProjectId(null));
+  }, [projectPath]);
+  if (!projectId) return <div>Loading kanban board...</div>;
+  return <KanbanPage projectId={projectId} />;
 }
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Code, Terminal, GitBranch, Calendar, HardDrive, Files } from 'lucide-react';
@@ -385,25 +398,9 @@ const ProjectDetailsPage: React.FC = () => {
 
 
           <TabsContent value="kanban" className="space-y-6 flex-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Project Kanban Board</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <div className="text-muted-foreground mb-4">
-                    📋
-                  </div>
-                  <h3 className="text-lg font-medium mb-2">Kanban Board</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Kanban board for {project.name} coming soon...
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    This will help you track tasks, issues, and progress for this specific project.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {project && project.path && (
+              <KanbanTabWithUuid projectPath={project.path} />
+            )}
           </TabsContent>
         </Tabs>
       </div>
